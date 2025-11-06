@@ -1,0 +1,14 @@
+# Environment files
+.env
+.env.*
+
+# Firebase debug logs
+firebase-debug.log
+
+# Flutter build artifacts
+**/build/
+.dart_tool/
+
+# IDE settings
+.vscode/
+.idea/
