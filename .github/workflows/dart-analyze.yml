@@ -1,4 +1,4 @@
-name: Dart Analyze
+name: Flutter Analyze
 
 on:
   push:
@@ -9,6 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
-      - run: dart --version
-      - run: cd hello_swift_slots && dart pub get && dart analyze
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.35.7
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-flutter-${{ hashFiles('hello_swift_slots/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: hello_swift_slots
+
+      - name: Analyze project
+        run: flutter analyze
+        working-directory: hello_swift_slots
