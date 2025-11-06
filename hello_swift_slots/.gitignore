@@ -1,0 +1,43 @@
+# Flutter & Dart
+**/build/
+.dart_tool/
+.packages
+pubspec.lock
+
+# macOS / Xcode
+DerivedData/
+*.xcworkspace
+*.xcodeproj/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
+# Android
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+local.properties
+*.keystore
+
+# VS Code / JetBrains IDEs
+.vscode/
+.idea/
+*.iml
+
+# Firebase / Secrets
+firebase-debug.log
+.firebaserc
+*.env
+.env.*
+firebase.json
+firestore.rules
+firestore.rules.dev
+firestore.indexes.json
+
+# Node / npm
+node_modules/
+npm-debug.log
+
+# OS / Misc
+.DS_Store
+Thumbs.db
