@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'env_debug.dart';
 import 'seed.dart';
 
 class DevMenu extends StatefulWidget {
@@ -81,6 +82,18 @@ class _DevMenuState extends State<DevMenu> {
             const SizedBox(height: 12),
             const Text(
               'Seeds 10 open slots with realistic sample data. Use only in debug.',
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const EnvDebugView(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.bug_report),
+              label: const Text('View Env Debug'),
             ),
           ],
         ),
