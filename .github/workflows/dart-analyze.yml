@@ -1,0 +1,26 @@
+name: Dart Analyze (Flutter)
+on:
+  pull_request:
+    paths:
+      - 'hello_swift_slots/**'
+  push:
+    branches: [main]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout code
+      - uses: actions/checkout@v5
+
+      # Set up Flutter – install the SDK and cache it
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Install dependencies and run analyzer
+      - name: Install dependencies & analyze
+        run: |
+          cd hello_swift_slots
+          flutter pub get
+          flutter analyze
