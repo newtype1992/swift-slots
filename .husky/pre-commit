@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC1091
+if [ -f "$(dirname "$0")/_/husky.sh" ]; then
+  . "$(dirname "$0")/_/husky.sh"
+fi
+
+if ! command -v dart >/dev/null 2>&1; then
+  echo "Husky pre-commit: dart not found, skipping checks."
+  exit 0
+fi
+
+pushd hello_swift_slots >/dev/null 2>&1 || exit 0
+
+dart format --set-exit-if-changed . || exit 1
+dart analyze || exit 1
+
+popd >/dev/null 2>&1 || true
