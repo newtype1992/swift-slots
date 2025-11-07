@@ -3,17 +3,13 @@ service cloud.firestore {
   match /databases/{db}/documents {
 
     match /slots/{slotId} {
-      // allow reads for signed-in users when slot is open
       allow read: if request.auth != null && resource.data.status == "open";
-      // TEMP: allow creates/updates while seeding (signed-in only)
-      allow create, update: if request.auth != null;
-      allow delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /bookings/{bookingId} {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /businesses/{businessId} {

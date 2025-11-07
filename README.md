@@ -43,3 +43,8 @@ Local and CI builds now source configuration from `.env` files or GitHub environ
 **Debugging defines in-app**
 - Open the Dev Menu (bug icon) while running a debug build.
 - Choose **View Env Debug** to see the active `dart-define` values resolved at runtime.
+
+## ☁️ Cloud Function: `bookSlot`
+- The `functions/` workspace now contains a Node 20 callable that runs a Firestore transaction to mark a slot as `held` and create a `bookings` document in `held` status.
+- Configure `functions/.env` (copy from `.env.example`) to tweak `HOLD_MINUTES` or `CURRENCY`, then run `npm install && npm run build`.
+- Use `npm run deploy` (or `firebase deploy --only functions`) to publish the callable; the Flutter client invokes it via `FirebaseFunctions.httpsCallable('bookSlot')`.

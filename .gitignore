@@ -1,2 +1,5 @@
 .env
 *.pem
+functions/.env
+functions/lib
+functions/node_modules
