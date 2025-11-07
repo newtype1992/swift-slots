@@ -1,5 +1,12 @@
 # Swift Slots
 
+## Setup & Deployment
+- Copy `functions/.env.example` to `functions/.env`, then set `HOLD_MINUTES`, `CURRENCY`, `STRIPE_SECRET_KEY`, and `STRIPE_PUBLISHABLE_KEY`.
+- From the `functions/` directory run `npm run setup` to push those values into Firebase Functions config via the CLI.
+- Still inside `functions/`, run `npm run seed` to create a pilot business, approved user, and sample slots/bookings for testing.
+- Deploy updated functions plus the Firestore index with `npm run deploy:full`.
+- Business onboarding and user approval remain manual per the MVP blueprint—you must continue reviewing new records in Firestore and set `approved: true` before granting access.
+
 ## Seeding (Dev)
 
 ```bash
