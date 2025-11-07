@@ -8,6 +8,12 @@
 - Once your `.env` is ready you can run `npm run init` from `functions/` to execute the setup, seeding, and deployment steps automatically.
 - Business onboarding and user approval remain manual per the MVP blueprint—you must continue reviewing new records in Firestore and set `approved: true` before granting access.
 
+### Automated Local Run
+1. Configure both `functions/.env` and the root `.env` with your Firebase project IDs, API base URL, and the Stripe/booking values listed above.
+2. From the repository root run `npm run local` to configure runtime variables, seed data, deploy functions/indexes, start the Firestore + Functions emulators, and launch the Flutter app with the correct `--dart-define` flags.
+3. Use the Flutter app in Chrome to authenticate, hold/cancel slots, and observe the Firestore/Function activity while the emulators run.
+- Business onboarding and user approvals are still manual—toggle `approved: true` for pilot users/businesses in Firestore per the MVP process.
+
 ## Seeding (Dev)
 
 ```bash

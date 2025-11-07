@@ -1,0 +1,7 @@
+{
+  "name": "swift-slots",
+  "private": true,
+  "scripts": {
+    "local": "npm --prefix functions run local"
+  }
+}
