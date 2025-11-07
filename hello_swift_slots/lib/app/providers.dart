@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -46,9 +47,13 @@ final slotByIdProvider = Provider.family<Slot?, String>((ref, slotId) {
   );
 });
 
+final firebaseFunctionsProvider = Provider<FirebaseFunctions>(
+  (ref) => FirebaseFunctions.instance,
+);
+
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
-  final firestore = ref.watch(firebaseFirestoreProvider);
-  return BookingRepository(firestore);
+  final functions = ref.watch(firebaseFunctionsProvider);
+  return BookingRepository(functions);
 });
 
 Slot? _findSlotById(List<Slot> slots, String id) {

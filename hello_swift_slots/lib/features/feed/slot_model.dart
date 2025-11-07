@@ -45,16 +45,16 @@ class Slot extends Equatable {
 
   static Slot fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
-    final start = data['startTime'];
-    final end = data['endTime'];
+    final start = data['startTime'] ?? data['startAt'];
+    final end = data['endTime'] ?? data['endAt'];
     return Slot(
       id: doc.id,
       businessName: data['businessName'] as String? ?? 'Unknown',
       category: data['category'] as String? ?? 'General',
       startTime: _parseTimestamp(start),
       endTime: _parseTimestamp(end),
-      price: (data['price'] as num?)?.toDouble() ?? 0,
-      discountPct: (data['discountPct'] as num?)?.toInt() ?? 0,
+      price: _normalizePrice(data['price']),
+      discountPct: _parseDiscount(data),
       address: data['address'] as String? ?? '',
       distanceKm: (data['distanceKm'] as num?)?.toDouble() ?? 0,
       status: data['status'] as String? ?? 'open',
@@ -66,9 +66,12 @@ class Slot extends Equatable {
       'businessName': businessName,
       'category': category,
       'startTime': Timestamp.fromDate(startTime),
+      'startAt': Timestamp.fromDate(startTime),
       'endTime': Timestamp.fromDate(endTime),
-      'price': price,
+      'endAt': Timestamp.fromDate(endTime),
+      'price': _priceToMinor(price),
       'discountPct': discountPct,
+      'discountPercent': discountPct,
       'address': address,
       'distanceKm': distanceKm,
       'status': status,
@@ -82,8 +85,41 @@ class Slot extends Equatable {
     if (value is DateTime) {
       return value;
     }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
     return DateTime.now();
   }
+
+  static double _normalizePrice(dynamic value) {
+    if (value is int) {
+      if (value >= 1000) {
+        return value / 100;
+      }
+      return value.toDouble();
+    }
+    if (value is double) {
+      if (value >= 1000 && value == value.roundToDouble()) {
+        return value / 100;
+      }
+      return value;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    return 0;
+  }
+
+  static int _parseDiscount(Map<String, dynamic> data) {
+    return (data['discountPercent'] as num?)?.toInt() ??
+        (data['discountPct'] as num?)?.toInt() ??
+        0;
+  }
+
+  static int _priceToMinor(double value) => (value * 100).round();
 
   @override
   List<Object?> get props => [

@@ -28,6 +28,7 @@ class SlotDetailScreen extends HookConsumerWidget {
     }
 
     final theme = Theme.of(context);
+    final isAvailable = slot.status == 'open';
 
     return AppScaffold(
       title: slot.businessName,
@@ -70,11 +71,13 @@ class SlotDetailScreen extends HookConsumerWidget {
         ),
       ),
       floatingActionButton: FilledButton.icon(
-        onPressed: () {
-          context.pushNamed(CheckoutScreen.routeName, extra: slot);
-        },
+        onPressed: isAvailable
+            ? () {
+                context.pushNamed(CheckoutScreen.routeName, extra: slot);
+              }
+            : null,
         icon: const Icon(Icons.shopping_bag_outlined),
-        label: const Text('Book'),
+        label: Text(isAvailable ? 'Hold Slot' : 'Unavailable'),
       ),
     );
   }

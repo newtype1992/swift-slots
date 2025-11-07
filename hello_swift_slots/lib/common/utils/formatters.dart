@@ -11,7 +11,16 @@ String formatSlotTimeRange(DateTime start, DateTime end) {
   return '$startText - $endText';
 }
 
-String formatPrice(double price) => priceFormat.format(price);
+String formatTimeOfDay(DateTime value) => slotTimeFormat.format(value);
+
+String formatPrice(double price, {String? currencyCode}) {
+  if (currencyCode == null || currencyCode.isEmpty) {
+    return priceFormat.format(price);
+  }
+  final normalized = currencyCode.toUpperCase();
+  final customFormat = NumberFormat.simpleCurrency(name: normalized);
+  return customFormat.format(price);
+}
 
 String formatDistance(double distanceKm) =>
     '${distanceFormat.format(distanceKm)} km away';

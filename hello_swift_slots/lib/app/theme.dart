@@ -10,7 +10,7 @@ ThemeData buildLightTheme() {
       foregroundColor: colorScheme.onSurface,
       elevation: 0,
     ),
-    scaffoldBackgroundColor: colorScheme.background,
+    scaffoldBackgroundColor: colorScheme.surface,
   );
 }
 
@@ -27,6 +27,6 @@ ThemeData buildDarkTheme() {
       foregroundColor: colorScheme.onSurface,
       elevation: 0,
     ),
-    scaffoldBackgroundColor: colorScheme.background,
+    scaffoldBackgroundColor: colorScheme.surface,
   );
 }

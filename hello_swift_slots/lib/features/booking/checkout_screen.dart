@@ -53,12 +53,21 @@ class CheckoutScreen extends HookConsumerWidget {
 
       isLoading.value = true;
       try {
-        await ref
+        final result = await ref
             .read(bookingRepositoryProvider)
             .confirmBooking(slot: currentSlot, user: user);
+
+        final amountText = formatPrice(
+          result.amountMajor,
+          currencyCode: result.currency,
+        );
+        final holdText = result.holdExpiresAt != null
+            ? 'Hold expires at '
+                '${formatTimeOfDay(result.holdExpiresAt!.toLocal())}.'
+            : 'Complete checkout soon to keep your spot.';
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Booking requested! We will update you soon.'),
+          SnackBar(
+            content: Text('Slot held! $amountText due. $holdText'),
           ),
         );
         if (context.mounted) {
@@ -96,7 +105,7 @@ class CheckoutScreen extends HookConsumerWidget {
             ],
             const SizedBox(height: 24),
             Text(
-              'Confirm to reserve this slot. We will create a booking record and notify the business.',
+              'Confirm to place a temporary hold on this slot while we finalize the booking.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const Spacer(),
@@ -109,7 +118,7 @@ class CheckoutScreen extends HookConsumerWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Confirm Booking'),
+                  : const Text('Hold Slot'),
             ),
           ],
         ),

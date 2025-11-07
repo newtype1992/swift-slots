@@ -1,26 +1,56 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../feed/slot_model.dart';
 
 class BookingRepository {
-  BookingRepository(this._firestore);
+  BookingRepository(this._functions);
 
-  final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
-  Future<void> confirmBooking({required Slot slot, required User user}) async {
-    final bookingRef = _firestore.collection('bookings').doc();
-    final slotRef = _firestore.collection('slots').doc(slot.id);
+  Future<BookSlotResult> confirmBooking({
+    required Slot slot,
+    required User user,
+  }) async {
+    assert(user.uid.isNotEmpty, 'User must be signed in.');
+    // The callable enforces auth server-side, but we keep the signature for clarity.
+    final callable = _functions.httpsCallable('bookSlot');
+    final response =
+        await callable.call<Map<String, dynamic>>({'slotId': slot.id});
+    final data = response.data;
 
-    final batch = _firestore.batch();
-    batch.set(bookingRef, {
-      'slotId': slot.id,
-      'userId': user.uid,
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-    batch.update(slotRef, {'status': 'booked'});
+    final bookingId = data['bookingId'] as String?;
+    if (bookingId == null || bookingId.isEmpty) {
+      throw Exception('Failed to reserve slot: missing booking id.');
+    }
 
-    await batch.commit();
+    final amountMinor = (data['amount'] as num?)?.toInt() ?? 0;
+    final currency = (data['currency'] as String? ?? 'usd').toLowerCase();
+    final holdExpiresAtText = data['holdExpiresAt'] as String?;
+    final holdExpiresAt =
+        holdExpiresAtText != null ? DateTime.tryParse(holdExpiresAtText) : null;
+
+    return BookSlotResult(
+      bookingId: bookingId,
+      amountMinor: amountMinor,
+      currency: currency,
+      holdExpiresAt: holdExpiresAt,
+    );
   }
+}
+
+class BookSlotResult {
+  const BookSlotResult({
+    required this.bookingId,
+    required this.amountMinor,
+    required this.currency,
+    required this.holdExpiresAt,
+  });
+
+  final String bookingId;
+  final int amountMinor;
+  final String currency;
+  final DateTime? holdExpiresAt;
+
+  double get amountMajor => amountMinor / 100;
 }
