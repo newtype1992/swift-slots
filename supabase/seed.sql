@@ -1,0 +1,2 @@
+-- Intentionally empty for now.
+-- Create local auth users through Supabase Auth, then use the RPC and tables defined in migrations.

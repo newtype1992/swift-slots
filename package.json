@@ -1,0 +1,30 @@
+{
+  "name": "micro-saas-starter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test:backend": "tsx --test tests/backend/integration.test.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.56.1",
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.6.0",
+    "stripe": "^20.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.23.0",
+    "eslint-config-next": "^15.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.3"
+  }
+}
