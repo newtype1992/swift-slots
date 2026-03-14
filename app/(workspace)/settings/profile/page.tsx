@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { updateProfileAction } from "../actions";
+import { getOperatorStudioSnapshot } from "@/lib/studios/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
 
 type ProfileSettingsPageProps = {
@@ -10,7 +12,14 @@ type ProfileSettingsPageProps = {
 
 export default async function ProfileSettingsPage({ searchParams }: ProfileSettingsPageProps) {
   const params = (await searchParams) ?? {};
-  const { profile, user, organizations, activeOrganization } = await requireWorkspaceShellContext();
+  const { supabase, profile, user, organizations, activeOrganization } = await requireWorkspaceShellContext();
+  const { studio } =
+    profile?.role === "studio_operator"
+      ? await getOperatorStudioSnapshot({
+          supabase,
+          userId: user.id,
+        })
+      : { studio: null };
 
   return (
     <div className="grid">
@@ -33,6 +42,17 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
               <strong>{profile?.email ?? user.email ?? "Unknown email"}</strong>
             </div>
             <div className="card subtle">
+              <span className="helper">Role</span>
+              <strong>{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</strong>
+              <p className="helper">
+                {profile?.role === "studio_operator"
+                  ? studio
+                    ? `Studio linked: ${studio.name}`
+                    : "No studio profile created yet."
+                  : "This account will eventually browse and book marketplace slots."}
+              </p>
+            </div>
+            <div className="card subtle">
               <span className="helper">User ID</span>
               <p className="helper mono">{user.id}</p>
             </div>
@@ -49,6 +69,7 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
         <article className="panel">
           <h3>Public profile</h3>
           <form action={updateProfileAction} className="form">
+            <input type="hidden" name="redirectTo" value="/settings/profile" />
             <div className="field">
               <label htmlFor="full-name">Full name</label>
               <input
@@ -59,11 +80,28 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
                 placeholder="Your display name"
               />
             </div>
+            <div className="field">
+              <label htmlFor="role">Account role</label>
+              <select id="role" name="role" className="select" defaultValue={profile?.role ?? "consumer"}>
+                <option value="consumer">Consumer</option>
+                <option value="studio_operator">Studio operator</option>
+              </select>
+            </div>
             <button type="submit" className="button">
               Save profile
             </button>
           </form>
-          <p className="helper">Email and authentication methods remain managed by Supabase Auth.</p>
+          <p className="helper">
+            Email and authentication methods remain managed by Supabase Auth. Studio operators create or edit the actual
+            studio record from the dedicated studio settings screen.
+          </p>
+          {profile?.role === "studio_operator" ? (
+            <div className="actions topSpacing">
+              <Link href="/settings/studio" className="buttonSecondary">
+                Open studio settings
+              </Link>
+            </div>
+          ) : null}
         </article>
       </section>
     </div>

@@ -17,10 +17,9 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
     <main className="grid two">
       <section className="panel">
         <p className="eyebrow">Access</p>
-        <h1>Sign in to the starter</h1>
+        <h1>Sign in to Swift Slots</h1>
         <p className="muted">
-          Use the local Supabase stack to create an account, establish a session, and move directly into the
-          organization dashboard.
+          Use the local Supabase stack to create an account, establish a session, and move directly into the Swift Slots workspace.
         </p>
         <div className="stack">
           <p className="helper">No seeded user is required. Local email confirmations are disabled right now.</p>

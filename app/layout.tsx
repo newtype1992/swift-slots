@@ -3,8 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Micro SaaS Starter",
-  description: "A backend-first Supabase starter with a minimal auth and org dashboard.",
+  title: "Swift Slots",
+  description: "A marketplace for discounted last-minute boutique fitness class openings.",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
         <div className="shell">
           <header className="nav">
             <Link href="/" className="brand">
-              Micro SaaS Starter
+              Swift Slots
             </Link>
             <div className="inline-actions">
               <Link href="/auth" className="buttonSecondary">

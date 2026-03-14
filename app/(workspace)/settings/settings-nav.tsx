@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/settings/profile", label: "Profile" },
-  { href: "/settings/organization", label: "Organization" },
-  { href: "/settings/billing", label: "Billing" },
+  { href: "/settings/studio", label: "Studio" },
+  { href: "/settings/organization", label: "Starter Org" },
+  { href: "/settings/billing", label: "Starter Billing" },
 ];
 
 export function SettingsNav() {

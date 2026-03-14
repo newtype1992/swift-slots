@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createOrganizationAction } from "@/app/dashboard/actions";
+import { getOperatorStudioSnapshot } from "@/lib/studios/server";
 import {
   activityLabel,
   activitySummary,
@@ -22,6 +22,26 @@ function formatDate(value: string) {
   });
 }
 
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("en-CA", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatMoney(amount: number) {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(amount);
+}
+
+function discountedPrice(originalPrice: number, discountPercent: number) {
+  return originalPrice * (1 - discountPercent / 100);
+}
+
 export default async function DashboardOverviewPage({ searchParams }: DashboardOverviewPageProps) {
   const params = (await searchParams) ?? {};
   const { supabase, user, profile, organizations, activeOrganization, activeRole } = await requireWorkspaceShellContext();
@@ -30,15 +50,24 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
     activeOrganizationId: activeOrganization?.id ?? null,
     activeRole,
   });
+  const { studio, slots } =
+    profile?.role === "studio_operator"
+      ? await getOperatorStudioSnapshot({
+          supabase,
+          userId: user.id,
+        })
+      : { studio: null, slots: [] };
+  const upcomingOpenSlots = slots.filter((slot) => slot.status === "open");
 
   return (
     <div className="grid">
       <section className="panel">
         <p className="eyebrow">Overview</p>
-        <h1>Workspace overview</h1>
+        <h1>{profile?.role === "studio_operator" ? "Studio operator overview" : "Consumer overview"}</h1>
         <p className="muted">
-          The app shell is now split into focused surfaces: profile, organization, and billing settings each have
-          their own route, while this page stays lightweight.
+          {profile?.role === "studio_operator"
+            ? "Use this screen to track studio setup and the open slots you are publishing into the Swift Slots marketplace."
+            : "Consumer mode is active. The marketplace flow comes next, but your account and role setup are already in place."}
         </p>
         {params.error ? <p className="message">Error: {params.error}</p> : null}
         {params.message ? <p className="message">{params.message}</p> : null}
@@ -46,12 +75,14 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
           <Link href="/settings/profile" className="buttonSecondary">
             Edit profile
           </Link>
-          <Link href="/settings/organization" className="buttonSecondary">
-            Manage organization
+          <Link href="/settings/studio" className="button">
+            {profile?.role === "studio_operator" ? "Manage studio" : "View studio tools"}
           </Link>
-          <Link href="/settings/billing" className="buttonSecondary">
-            Review billing
-          </Link>
+          {activeOrganization ? (
+            <Link href="/settings/organization" className="buttonSecondary">
+              Starter org settings
+            </Link>
+          ) : null}
         </div>
       </section>
 
@@ -63,121 +94,173 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             <strong>{profile?.full_name || "No profile name yet"}</strong>
             <p className="muted">{profile?.email ?? user.email ?? "Unknown email"}</p>
             <div className="meta">
-              <span className="tag">{organizations.length} workspaces</span>
-              <span className="tag">{activeRole ?? "No active role"}</span>
+              <span className="tag">{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</span>
+              <span className="tag">{organizations.length} inherited workspaces</span>
             </div>
           </div>
-          {activeOrganization ? (
+          {profile?.role === "studio_operator" && studio ? (
             <div className="card subtle topSpacing">
-              <strong>{activeOrganization.name}</strong>
+              <strong>{studio.name}</strong>
+              <p className="helper">{studio.location_text}</p>
               <div className="meta">
-                <span className="tag">{activeOrganization.slug}</span>
-                <span className="tag">{members.length} members</span>
-                <span className="tag">
-                  {billingSummary ? `${billingSummary.effectivePlan.name} plan` : "No billing snapshot"}
-                </span>
+                <span className="tag">{studio.slug}</span>
+                <span className="tag">{upcomingOpenSlots.length} open slots</span>
               </div>
+            </div>
+          ) : profile?.role === "studio_operator" ? (
+            <div className="card subtle topSpacing">
+              <p className="muted">No studio profile exists yet. Create one from Studio settings to unlock slot posting.</p>
             </div>
           ) : (
             <div className="card subtle topSpacing">
-              <p className="muted">No active organization is selected yet. Create one to unlock the workspace flow.</p>
+              <p className="muted">Consumer mode is ready. Marketplace browsing and booking are still to be implemented.</p>
             </div>
           )}
         </article>
 
         <article className="panel">
-          <p className="eyebrow">Create</p>
-          <h2>Create an organization</h2>
-          <p className="muted">
-            This keeps organization creation on the overview page and leaves deeper management to the settings area.
-          </p>
-          <form action={createOrganizationAction} className="form">
-            <input type="hidden" name="redirectTo" value="/dashboard" />
-            <div className="field">
-              <label htmlFor="org-name">Organization name</label>
-              <input id="org-name" name="name" type="text" required />
-            </div>
-            <div className="field">
-              <label htmlFor="org-slug">Organization slug</label>
-              <input id="org-slug" name="slug" type="text" placeholder="optional-auto-generated" />
-            </div>
-            <button type="submit" className="button">
-              Create organization
-            </button>
-          </form>
+          <p className="eyebrow">Next step</p>
+          <h2>{profile?.role === "studio_operator" ? "Studio workflow" : "Consumer workflow"}</h2>
+          <div className="list compact">
+            {profile?.role === "studio_operator" ? (
+              <>
+                <div className="card subtle">
+                  <span className="helper">Studio profile</span>
+                  <strong>{studio ? "Configured" : "Needs setup"}</strong>
+                  <p className="helper">
+                    {studio ? "Update identity, categories, and location from Studio settings." : "Create the studio profile first."}
+                  </p>
+                </div>
+                <div className="card subtle">
+                  <span className="helper">Slot publishing</span>
+                  <strong>{studio ? "Ready" : "Blocked until studio exists"}</strong>
+                  <p className="helper">Post discounted openings with original price plus discount percent.</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="card subtle">
+                  <span className="helper">Account role</span>
+                  <strong>Consumer mode active</strong>
+                  <p className="helper">This account is prepared for marketplace browsing once the consumer flow is built.</p>
+                </div>
+                <div className="card subtle">
+                  <span className="helper">Immediate action</span>
+                  <strong>Keep profile current</strong>
+                  <p className="helper">Switch roles from Profile settings later if this account needs studio access.</p>
+                </div>
+              </>
+            )}
+          </div>
         </article>
       </section>
 
-      {activeOrganization ? (
+      {profile?.role === "studio_operator" ? (
         <>
           <section className="grid three">
             <article className="card subtle">
-              <h3>Team snapshot</h3>
+              <h3>Studio readiness</h3>
               <div className="list compact">
                 <div className="splitRow">
-                  <span className="muted">Members</span>
-                  <strong>{members.length}</strong>
+                  <span className="muted">Studio profile</span>
+                  <strong>{studio ? "Ready" : "Missing"}</strong>
                 </div>
                 <div className="splitRow">
-                  <span className="muted">Pending invites</span>
-                  <strong>{pendingInvites.length}</strong>
+                  <span className="muted">Categories</span>
+                  <strong>{studio?.class_categories.length ?? 0}</strong>
                 </div>
               </div>
             </article>
 
             <article className="card subtle">
-              <h3>Billing snapshot</h3>
+              <h3>Open inventory</h3>
               <div className="list compact">
                 <div className="splitRow">
-                  <span className="muted">Current plan</span>
-                  <strong>{billingSummary?.effectivePlan.name ?? "Unavailable"}</strong>
+                  <span className="muted">Visible open slots</span>
+                  <strong>{upcomingOpenSlots.length}</strong>
                 </div>
                 <div className="splitRow">
-                  <span className="muted">Seats remaining</span>
-                  <strong>{billingSummary?.seatsRemaining ?? 0}</strong>
+                  <span className="muted">Total listed slots</span>
+                  <strong>{slots.length}</strong>
                 </div>
               </div>
             </article>
 
             <article className="card subtle">
-              <h3>Workspace status</h3>
+              <h3>Inherited starter state</h3>
               <div className="list compact">
                 <div className="splitRow">
-                  <span className="muted">Role</span>
-                  <strong>{activeRole ?? "member"}</strong>
+                  <span className="muted">Workspace role</span>
+                  <strong>{activeRole ?? "Not set"}</strong>
                 </div>
                 <div className="splitRow">
-                  <span className="muted">Created</span>
-                  <strong>{formatDate(activeOrganization.created_at)}</strong>
+                  <span className="muted">Inherited orgs</span>
+                  <strong>{organizations.length}</strong>
                 </div>
               </div>
             </article>
           </section>
 
           <section className="panel">
-            <p className="eyebrow">Activity</p>
-            <h2>{activeOrganization.name} recent activity</h2>
+            <p className="eyebrow">Slots</p>
+            <h2>{studio ? `${studio.name} recent slots` : "No studio slots yet"}</h2>
             <div className="list">
-              {visibleActivityLogs.length > 0 ? (
-                visibleActivityLogs.slice(0, 6).map((activity) => (
-                  <article key={activity.id} className="card subtle">
+              {slots.length > 0 ? (
+                slots.slice(0, 6).map((slot) => (
+                  <article key={slot.id} className="card subtle">
                     <div className="splitRow">
                       <div className="stack compactStack">
-                        <strong>{activityLabel(activity.action)}</strong>
-                        <span className="helper">{activitySummary(activity)}</span>
+                        <strong>{slot.class_type}</strong>
+                        <span className="helper">{formatDateTime(slot.start_time)}</span>
                       </div>
-                      <span className="helper">{formatDate(activity.created_at)}</span>
+                      <span className={`tag status-${slot.status}`}>{slot.status}</span>
+                    </div>
+                    <div className="meta topSpacing">
+                      <span className="tag">{slot.available_spots} spots</span>
+                      <span className="tag">{slot.discount_percent}% off</span>
+                      <span className="tag">{formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}</span>
                     </div>
                   </article>
                 ))
               ) : (
                 <div className="card subtle">
-                  <p className="muted">No recent activity is visible inside the current plan retention window.</p>
+                  <p className="muted">Post the first open slot from Studio settings to start populating this overview.</p>
                 </div>
               )}
             </div>
           </section>
         </>
+      ) : null}
+
+      {activeOrganization ? (
+        <section className="panel">
+          <p className="eyebrow">Starter carryover</p>
+          <h2>{activeOrganization.name} inherited workspace activity</h2>
+          <div className="list">
+            {visibleActivityLogs.length > 0 ? (
+              visibleActivityLogs.slice(0, 4).map((activity) => (
+                <article key={activity.id} className="card subtle">
+                  <div className="splitRow">
+                    <div className="stack compactStack">
+                      <strong>{activityLabel(activity.action)}</strong>
+                      <span className="helper">{activitySummary(activity)}</span>
+                    </div>
+                    <span className="helper">{formatDate(activity.created_at)}</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="card subtle">
+                <p className="muted">No starter workspace activity is visible right now.</p>
+              </div>
+            )}
+          </div>
+          <div className="meta topSpacing">
+            <span className="tag">{members.length} members</span>
+            <span className="tag">{pendingInvites.length} pending invites</span>
+            <span className="tag">{billingSummary?.effectivePlan.name ?? "No plan snapshot"}</span>
+          </div>
+        </section>
       ) : null}
     </div>
   );

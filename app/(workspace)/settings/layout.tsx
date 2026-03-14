@@ -9,9 +9,9 @@ export default function SettingsLayout({
     <div className="grid">
       <section className="panel">
         <p className="eyebrow">Settings</p>
-        <h1>Workspace settings</h1>
+        <h1>Swift Slots settings</h1>
         <p className="muted">
-          Dedicated screens for account, organization, and billing management.
+          Product settings come first. Inherited starter controls remain available while the app is still being adapted.
         </p>
         <SettingsNav />
       </section>

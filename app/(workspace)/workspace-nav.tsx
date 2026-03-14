@@ -15,13 +15,18 @@ const links = [
     match: (pathname: string) => pathname.startsWith("/settings/profile"),
   },
   {
+    href: "/settings/studio",
+    label: "Studio",
+    match: (pathname: string) => pathname.startsWith("/settings/studio"),
+  },
+  {
     href: "/settings/organization",
-    label: "Organization",
+    label: "Starter Org",
     match: (pathname: string) => pathname.startsWith("/settings/organization"),
   },
   {
     href: "/settings/billing",
-    label: "Billing",
+    label: "Starter Billing",
     match: (pathname: string) => pathname.startsWith("/settings/billing"),
   },
 ];

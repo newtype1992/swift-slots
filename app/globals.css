@@ -39,7 +39,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -261,7 +262,9 @@ select {
   font-weight: 700;
 }
 
-.field input {
+.field input,
+.field textarea,
+.field .select {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -269,12 +272,9 @@ select {
   padding: 14px 16px;
 }
 
-.field .select {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: white;
-  padding: 14px 16px;
+.field textarea {
+  resize: vertical;
+  min-height: 120px;
 }
 
 .helper {
