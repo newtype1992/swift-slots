@@ -1,210 +1,166 @@
-# Micro SaaS Starter Template
+# Swift Slots
 
-This repository is a backend-first starter template for building micro SaaS applications using:
+Swift Slots is a mobile-first web marketplace for last-minute boutique fitness class openings in Montreal. Studios publish canceled or unsold spots at a percentage discount from the original price, and consumers book those openings quickly through a simple web flow.
 
-- Supabase for database, auth, storage, and local infrastructure
-- Next.js for the first authenticated application shell
-- Codex CLI for implementation and iteration
-- migrations-first schema management with RLS enabled by default
+This project starts from the Micro SaaS Starter codebase. It keeps the current stack and starter integrations for now, while explicitly evaluating which inherited capabilities should be adapted, extended, or removed as Swift Slots becomes more product-specific.
 
-## V1 Status
+## Product Overview
 
-`v1` is complete as a reusable platform starter.
+Swift Slots exists to prove two things:
 
-The template currently provides:
+- Studios can recover revenue from late cancellations.
+- Consumers will repeatedly book discounted classes on short notice.
 
-- sign up or sign in with Supabase Auth
-- land in a protected dashboard
-- create an organization through the `create_organization` RPC
-- switch between organizations with a persisted active workspace
-- initialize a canonical subscription row for every organization
-- display workspace billing state and entitlement usage
-- log billing lifecycle events into the workspace activity feed
-- apply plan-based retention windows to historical activity and invite history
-- invite members through server-owned actions
-- resend or revoke invites from the owner dashboard
-- accept invites through a dedicated onboarding link
-- read back profile, membership, and invite data through RLS-protected queries
+The MVP is intentionally narrow. If a feature does not directly support slot recovery or repeat booking behavior, it is out of scope.
 
-This repo is intended to be the reusable platform base for future SaaS products, not the final domain-specific product itself.
+## Core MVP Scope
 
-## What V1 Is
+### Studio operator workflows
 
-V1 is a deployable micro SaaS platform starter with:
+- Create and manage a studio profile.
+- Post a last-minute slot for a class with class type, start time, available spots, original price, and discount percentage.
+- View booking confirmations and slot status.
+- Rely on the system to auto-lock a slot 15 minutes before class start if it has not already filled.
 
-- authentication
-- multi-tenant organizations and memberships
-- invite and membership management
-- subscription and entitlement scaffolding
-- settings and dashboard shell
-- local and hosted Supabase workflow
-- Vercel deployment path
-- backend verification and CI
+### Consumer workflows
 
-## What V1 Is Not
+- Browse nearby available classes in Montreal.
+- View studio, class, timing, and pricing details.
+- Book and pay for a single spot with a fast confirmation flow.
+- See real-time availability so filled or locked slots are no longer bookable.
 
-V1 does not yet include:
+## Roles
 
-- a domain-specific revenue product
-- live Resend configuration by default
-- validated live Stripe checkout/portal/webhook setup by default
-- a hosted SSR email confirmation callback route
-- a one-command generator CLI for spawning new product repos
+Swift Slots uses separate product roles:
 
-## Local Development Setup
+- `studio_operator`: manages studio information and posts slots.
+- `consumer`: browses and books slots.
 
-1. Run `npm install`
-2. Copy `.env.example` to `.env.local`
-3. Fill `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `supabase status -o env`
-4. Optional: set `RESEND_API_KEY` and `EMAIL_FROM` to enable invite email delivery
-5. Optional: set Stripe keys to enable paid checkout and portal flows
-6. In Stripe, create recurring prices with lookup keys:
-   - `micro-saas-starter-pro-monthly`
-   - `micro-saas-starter-business-monthly`
-7. Point your Stripe webhook to `/api/stripe/webhooks`
-8. Run `supabase start`
-9. Run `npm run dev`
-10. Open `http://localhost:3000`
+The docs and implementation should treat these as distinct roles rather than a single shared account type.
+
+## Pricing and Inventory Rules
+
+- The canonical pricing model is `original_price` plus `discount_percent`.
+- The discounted price should be derived from those values rather than stored as the primary business input.
+- Slots must have a future start time and at least one available spot.
+- Slots auto-lock 15 minutes before class start if not already filled.
+- Slots cannot be edited after the first booking.
+- Overbooking is not allowed.
+
+## Architecture
+
+Swift Slots retains the current Micro SaaS Starter stack:
+
+- Frontend: Next.js App Router application.
+- Backend: Supabase Postgres, Supabase Auth, Row Level Security, and migrations-first schema management.
+- Payments: Stripe for booking payments and platform commission handling.
+- Email: Resend for transactional notifications if enabled.
+- Deployment: local Supabase CLI plus Docker for development, and Vercel plus hosted Supabase for production.
+
+The product is web-first. A native mobile application may be added later for consumers booking slots, but the initial MVP should be implemented as a web application.
+
+## Inherited Starter Capabilities
+
+The starter currently includes generic SaaS platform capabilities such as:
+
+- auth and protected routes
+- organization and membership scaffolding
+- invites
+- billing scaffolding
+- dashboard and settings shells
+
+Swift Slots should not remove these blindly. Each inherited capability should be evaluated and either:
+
+- reused directly
+- adapted into a studio or marketplace concept
+- removed once it is clearly unnecessary
+
+The same rule applies to integrations and supporting tools. Prefer extending existing starter functionality when it fits the product cleanly, and remove tools only when they are clearly not needed.
+
+## Local Development
+
+1. Install dependencies.
+
+```bash
+npm install
+```
+
+2. Copy `.env.example` to `.env.local`.
+
+```bash
+copy .env.example .env.local
+```
+
+3. Start local Supabase.
+
+```bash
+supabase start
+```
+
+4. Populate `.env.local`.
+
+- Set `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `supabase status -o env`.
+- Keep the existing starter environment variables unless a new variable is genuinely required.
+- Add Stripe and Resend values only when those flows are being exercised.
+
+5. Start the app.
+
+```bash
+npm run dev
+```
+
+6. Open `http://localhost:3000`.
 
 ## Verification
 
-- Run `npm run test:backend` to verify the sensitive local flows:
-  - org and membership RPCs
-  - entitlement limits and retention windows
-  - Stripe webhook sync and billing activity logs
-- Run `npm run build` before shipping template changes
-- GitHub Actions now runs the same verification flow automatically on pull requests and pushes to `main`
+Run the existing checks before shipping meaningful changes:
 
-## Production Deployment
+```bash
+npm run build
+npm run test:backend
+```
 
-This template is designed for:
+As Swift Slots replaces starter concepts with domain-specific workflows, the verification surface should evolve with it.
 
-- local Supabase during development
-- hosted Supabase in preview and production
-- Vercel for app hosting
+## Production Direction
 
-### Recommended path
+The intended production path remains:
 
-Use Vercel's native GitHub integration as the default deployment path.
+- Vercel for the Next.js app
+- hosted Supabase for the backend
+- Stripe for payments
+- Resend for transactional email if needed
 
-1. Import this GitHub repository into Vercel
-2. Let Vercel detect the Next.js app
-3. Create a hosted Supabase project
-4. Push this repo's migrations to the hosted Supabase project
-5. Add the hosted Supabase environment variables to Vercel
-6. Deploy Preview and Production from Vercel
+Production setup should continue to follow the starter's deployment model unless Swift Slots introduces a concrete reason to change it.
 
-### Promote local Supabase to hosted Supabase
+## Development Workflow
 
-Your local Supabase Docker stack is for development only. To make the backend live:
+This repository should follow GitHub Flow:
 
-1. Create a hosted Supabase project in the Supabase dashboard
-2. Run `supabase login`
-3. Run `supabase link --project-ref <your-project-ref>`
-4. Run `supabase db push`
-5. Copy the hosted project values into Vercel:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` only if you want webhook/service-role features live
+1. Create a branch from `main` for each feature or fix.
+2. Make small, reviewable commits.
+3. Open a pull request for review and discussion.
+4. Merge only after approval.
+5. Keep `main` deployable at all times.
 
-Do not use local values like `http://127.0.0.1:54321` in Vercel.
+## Out of Scope for the MVP
 
-### Minimum Vercel environment variables
+The MVP should not include:
 
-Required for the app to function:
+- long-term schedules
+- recurring calendars
+- consumer memberships or class packs
+- loyalty programs
+- multi-city support
+- ratings and reviews
+- chat or messaging
+- studio analytics dashboards
+- dynamic pricing
 
-- `APP_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+## Success Criteria
 
-Optional until you want those features live:
+The MVP is successful only if the initial launch proves:
 
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- `RESEND_API_KEY`
-- `EMAIL_FROM`
-
-### Auth and redirect configuration
-
-When you move to hosted Supabase, update Supabase Auth settings to allow your deployed URLs.
-
-At minimum, configure:
-
-- your Vercel production domain
-- your Vercel preview domain pattern if you want preview auth flows to work
-- any local development URL you still use, such as `http://localhost:3000`
-
-### Current hosted auth behavior
-
-The current hosted starter works with password sign-up and sign-in, but there is one important caveat:
-
-- local development assumes email confirmation is disabled
-- the current template does not yet include a dedicated SSR email-confirmation callback route such as `/auth/confirm`
-- because of that, the simplest production-safe configuration today is to keep Supabase `Confirm email` disabled while validating the hosted starter
-
-Current recommendation for hosted smoke tests:
-
-- disable `Confirm email` in Supabase Auth
-- configure `Site URL` and redirect URLs for your deployed domain
-- validate sign up, sign in, organization creation, and dashboard access without email confirmation
-
-If you want to re-enable email confirmation later, add a proper confirmation callback route and update the auth flow to handle hosted email verification before turning it back on.
-
-## Validation Summary
-
-The v1 template has been validated across:
-
-- local development with Supabase CLI and Docker
-- production build verification with `npm run build`
-- backend verification with `npm run test:backend`
-- GitHub Actions CI
-- hosted deployment on Vercel
-- hosted Supabase migration push and smoke testing for:
-  - sign up
-  - sign in
-  - create organization
-  - dashboard and settings access
-  - sign out and sign back in
-
-Invite email delivery was not validated live because Resend was intentionally left unconfigured for v1.
-
-## Known V1 Limitations
-
-- Hosted email confirmation is treated as out of scope for v1; keep Supabase `Confirm email` disabled unless you add a proper `/auth/confirm` callback flow.
-- Live Resend invite delivery is optional and not configured by default.
-- Live Stripe billing validation is optional and not configured by default.
-
-## Recommended Usage
-
-Use this repo as a platform starter for new SaaS products.
-
-Recommended workflow:
-
-1. Clone or copy this repo into a new product repo.
-2. Rename branding, metadata, and environment values for the new app.
-3. Keep the shared platform features from this repo.
-4. Add the domain-specific business workflow in the new repo.
-
-Do not build multiple unrelated SaaS products directly inside this repo. Keep this repository generic and reusable.
-
-### Deployment ownership
-
-This template assumes Vercel native Git integration as the default deployment model.
-That keeps deployment simple and avoids extra GitHub deployment secrets.
-
-## Local URLs
-
-- App: `http://localhost:3000`
-- Supabase Studio: `http://127.0.0.1:54323`
-- Local inbox: `http://127.0.0.1:54324`
-
-## Development Philosophy
-
-- Backend first
-- Migrations only, no direct schema edits
-- RLS enabled on user data
-- server-owned writes for billing and audit-sensitive records
-- server-owned invite and membership changes
-- Local development before production deployment
+- 30-40% of posted slots are rebooked
+- 25% or more of consumers book more than once
+- studios voluntarily ask for continued access
