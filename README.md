@@ -7,9 +7,11 @@ This repository is a backend-first starter template for building micro SaaS appl
 - Codex CLI for implementation and iteration
 - migrations-first schema management with RLS enabled by default
 
-## Current Milestone
+## V1 Status
 
-The starter now supports the first real SaaS workflow:
+`v1` is complete as a reusable platform starter.
+
+The template currently provides:
 
 - sign up or sign in with Supabase Auth
 - land in a protected dashboard
@@ -23,6 +25,31 @@ The starter now supports the first real SaaS workflow:
 - resend or revoke invites from the owner dashboard
 - accept invites through a dedicated onboarding link
 - read back profile, membership, and invite data through RLS-protected queries
+
+This repo is intended to be the reusable platform base for future SaaS products, not the final domain-specific product itself.
+
+## What V1 Is
+
+V1 is a deployable micro SaaS platform starter with:
+
+- authentication
+- multi-tenant organizations and memberships
+- invite and membership management
+- subscription and entitlement scaffolding
+- settings and dashboard shell
+- local and hosted Supabase workflow
+- Vercel deployment path
+- backend verification and CI
+
+## What V1 Is Not
+
+V1 does not yet include:
+
+- a domain-specific revenue product
+- live Resend configuration by default
+- validated live Stripe checkout/portal/webhook setup by default
+- a hosted SSR email confirmation callback route
+- a one-command generator CLI for spawning new product repos
 
 ## Local Development Setup
 
@@ -124,6 +151,43 @@ Current recommendation for hosted smoke tests:
 - validate sign up, sign in, organization creation, and dashboard access without email confirmation
 
 If you want to re-enable email confirmation later, add a proper confirmation callback route and update the auth flow to handle hosted email verification before turning it back on.
+
+## Validation Summary
+
+The v1 template has been validated across:
+
+- local development with Supabase CLI and Docker
+- production build verification with `npm run build`
+- backend verification with `npm run test:backend`
+- GitHub Actions CI
+- hosted deployment on Vercel
+- hosted Supabase migration push and smoke testing for:
+  - sign up
+  - sign in
+  - create organization
+  - dashboard and settings access
+  - sign out and sign back in
+
+Invite email delivery was not validated live because Resend was intentionally left unconfigured for v1.
+
+## Known V1 Limitations
+
+- Hosted email confirmation is treated as out of scope for v1; keep Supabase `Confirm email` disabled unless you add a proper `/auth/confirm` callback flow.
+- Live Resend invite delivery is optional and not configured by default.
+- Live Stripe billing validation is optional and not configured by default.
+
+## Recommended Usage
+
+Use this repo as a platform starter for new SaaS products.
+
+Recommended workflow:
+
+1. Clone or copy this repo into a new product repo.
+2. Rename branding, metadata, and environment values for the new app.
+3. Keep the shared platform features from this repo.
+4. Add the domain-specific business workflow in the new repo.
+
+Do not build multiple unrelated SaaS products directly inside this repo. Keep this repository generic and reusable.
 
 ### Deployment ownership
 
