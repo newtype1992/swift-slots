@@ -206,10 +206,143 @@ test("org and membership RPCs enforce roles and protect direct writes", async ()
   assert.ok(directSubscriptionUpdate.error);
 });
 
-test("billing entitlements enforce free seat limits and retention windows", async () => {
+test("swift slots schema enforces roles, marketplace visibility, and booking boundaries", async () => {
   const context = loadSupabaseContext();
   const admin = createAdminClient(context);
   const stamp = Date.now() + 1;
+  const operatorClient = await signUpAndSignIn(context, `studio-operator-${stamp}@example.com`);
+  const consumerClient = await signUpAndSignIn(context, `consumer-${stamp}@example.com`);
+
+  const {
+    data: { user: operatorUser },
+  } = await operatorClient.auth.getUser();
+  const {
+    data: { user: consumerUser },
+  } = await consumerClient.auth.getUser();
+
+  assert.ok(operatorUser?.id);
+  assert.ok(consumerUser?.id);
+
+  const promoteOperator = await admin
+    .from("profiles")
+    .update({ role: "studio_operator" })
+    .eq("id", operatorUser!.id);
+  assert.equal(promoteOperator.error, null);
+
+  const consumerStudioAttempt = await consumerClient.from("studios").insert({
+    operator_user_id: consumerUser!.id,
+    name: `Consumer Studio ${stamp}`,
+    slug: `consumer-studio-${stamp}`,
+    location_text: "123 Test Street, Montreal",
+    class_categories: ["Yoga"],
+  });
+  assert.ok(consumerStudioAttempt.error);
+
+  const studioInsert = await operatorClient
+    .from("studios")
+    .insert({
+      operator_user_id: operatorUser!.id,
+      name: `Operator Studio ${stamp}`,
+      slug: `operator-studio-${stamp}`,
+      location_text: "456 Fitness Avenue, Montreal",
+      class_categories: ["Yoga", "Pilates"],
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(studioInsert.error, null);
+  assert.ok(studioInsert.data?.id);
+
+  const openSlotInsert = await operatorClient
+    .from("slots")
+    .insert({
+      studio_id: studioInsert.data!.id,
+      class_type: "Yoga Flow",
+      start_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      class_length_minutes: 60,
+      original_price: 30,
+      discount_percent: 25,
+      available_spots: 2,
+      status: "open",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(openSlotInsert.error, null);
+
+  const openSlotForConsumer = await consumerClient.from("slots").select("id").eq("id", openSlotInsert.data!.id).maybeSingle();
+  assert.equal(openSlotForConsumer.error, null);
+  assert.equal(openSlotForConsumer.data?.id, openSlotInsert.data!.id);
+
+  const lockedSoonSlotInsert = await operatorClient
+    .from("slots")
+    .insert({
+      studio_id: studioInsert.data!.id,
+      class_type: "Power Pilates",
+      start_time: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      class_length_minutes: 45,
+      original_price: 35,
+      discount_percent: 20,
+      available_spots: 1,
+      status: "open",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(lockedSoonSlotInsert.error, null);
+
+  const lockedSoonSlotForConsumer = await consumerClient.from("slots").select("id").eq("id", lockedSoonSlotInsert.data!.id);
+  assert.equal(lockedSoonSlotForConsumer.error, null);
+  assert.equal(lockedSoonSlotForConsumer.data?.length, 0);
+
+  const lockedSoonSlotForOperator = await operatorClient
+    .from("slots")
+    .select("id")
+    .eq("id", lockedSoonSlotInsert.data!.id)
+    .maybeSingle();
+  assert.equal(lockedSoonSlotForOperator.error, null);
+  assert.equal(lockedSoonSlotForOperator.data?.id, lockedSoonSlotInsert.data!.id);
+
+  const directBookingAttempt = await consumerClient.from("bookings").insert({
+    slot_id: openSlotInsert.data!.id,
+    consumer_user_id: consumerUser!.id,
+    payment_status: "pending",
+  });
+  assert.ok(directBookingAttempt.error);
+
+  const adminBooking = await admin
+    .from("bookings")
+    .insert({
+      slot_id: openSlotInsert.data!.id,
+      consumer_user_id: consumerUser!.id,
+      payment_status: "pending",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(adminBooking.error, null);
+
+  const forbiddenSlotEdit = await operatorClient
+    .from("slots")
+    .update({ class_type: "Edited Class Name" })
+    .eq("id", openSlotInsert.data!.id);
+  assert.ok(forbiddenSlotEdit.error);
+
+  const allowedStatusUpdate = await operatorClient
+    .from("slots")
+    .update({ status: "filled" })
+    .eq("id", openSlotInsert.data!.id);
+  assert.equal(allowedStatusUpdate.error, null);
+
+  const bookingVisibleToOperator = await operatorClient
+    .from("bookings")
+    .select("id")
+    .eq("id", adminBooking.data!.id)
+    .maybeSingle();
+  assert.equal(bookingVisibleToOperator.error, null);
+  assert.equal(bookingVisibleToOperator.data?.id, adminBooking.data!.id);
+});
+
+test("billing entitlements enforce free seat limits and retention windows", async () => {
+  const context = loadSupabaseContext();
+  const admin = createAdminClient(context);
+  const stamp = Date.now() + 2;
   const ownerClient = await signUpAndSignIn(context, `entitled-owner-${stamp}@example.com`);
   const memberClient = await signUpAndSignIn(context, `entitled-member-${stamp}@example.com`);
   const organization = await createOrganization(ownerClient, `Entitled Org ${stamp}`, `entitled-org-${stamp}`);
@@ -288,7 +421,7 @@ test("billing entitlements enforce free seat limits and retention windows", asyn
 test("webhook sync updates subscriptions and records billing activity", async () => {
   const context = loadSupabaseContext();
   const admin = createAdminClient(context);
-  const stamp = Date.now() + 2;
+  const stamp = Date.now() + 3;
   const ownerClient = await signUpAndSignIn(context, `billing-owner-${stamp}@example.com`);
   const organization = await createOrganization(ownerClient, `Billing Org ${stamp}`, `billing-org-${stamp}`);
   const customerId = `cus_test_${stamp}`;
