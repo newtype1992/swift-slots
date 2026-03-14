@@ -10,6 +10,11 @@ const links = [
     match: (pathname: string) => pathname === "/dashboard",
   },
   {
+    href: "/marketplace",
+    label: "Marketplace",
+    match: (pathname: string) => pathname.startsWith("/marketplace"),
+  },
+  {
     href: "/settings/profile",
     label: "Profile",
     match: (pathname: string) => pathname.startsWith("/settings/profile"),

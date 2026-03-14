@@ -307,16 +307,32 @@ test("swift slots schema enforces roles, marketplace visibility, and booking bou
   });
   assert.ok(directBookingAttempt.error);
 
-  const adminBooking = await admin
-    .from("bookings")
-    .insert({
-      slot_id: openSlotInsert.data!.id,
-      consumer_user_id: consumerUser!.id,
-      payment_status: "pending",
+  const operatorBookingAttempt = await operatorClient.rpc("create_slot_booking", {
+    p_slot_id: openSlotInsert.data!.id,
+  });
+  assert.ok(operatorBookingAttempt.error);
+
+  const bookingResponse = await consumerClient
+    .rpc("create_slot_booking", {
+      p_slot_id: openSlotInsert.data!.id,
     })
-    .select("id")
     .single<{ id: string }>();
-  assert.equal(adminBooking.error, null);
+  assert.equal(bookingResponse.error, null);
+  assert.ok(bookingResponse.data?.id);
+
+  const duplicateBookingAttempt = await consumerClient.rpc("create_slot_booking", {
+    p_slot_id: openSlotInsert.data!.id,
+  });
+  assert.ok(duplicateBookingAttempt.error);
+
+  const slotAfterBooking = await operatorClient
+    .from("slots")
+    .select("available_spots, status")
+    .eq("id", openSlotInsert.data!.id)
+    .maybeSingle<{ available_spots: number; status: string }>();
+  assert.equal(slotAfterBooking.error, null);
+  assert.equal(slotAfterBooking.data?.available_spots, 1);
+  assert.equal(slotAfterBooking.data?.status, "open");
 
   const forbiddenSlotEdit = await operatorClient
     .from("slots")
@@ -333,10 +349,10 @@ test("swift slots schema enforces roles, marketplace visibility, and booking bou
   const bookingVisibleToOperator = await operatorClient
     .from("bookings")
     .select("id")
-    .eq("id", adminBooking.data!.id)
+    .eq("id", bookingResponse.data!.id)
     .maybeSingle();
   assert.equal(bookingVisibleToOperator.error, null);
-  assert.equal(bookingVisibleToOperator.data?.id, adminBooking.data!.id);
+  assert.equal(bookingVisibleToOperator.data?.id, bookingResponse.data!.id);
 });
 
 test("billing entitlements enforce free seat limits and retention windows", async () => {

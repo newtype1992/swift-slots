@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMarketplaceSlots } from "@/lib/marketplace/server";
 import { getOperatorStudioSnapshot } from "@/lib/studios/server";
 import {
   activityLabel,
@@ -57,6 +58,13 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
           userId: user.id,
         })
       : { studio: null, slots: [] };
+  const consumerMarketplaceSlots =
+    profile?.role === "consumer"
+      ? await getMarketplaceSlots({
+          supabase,
+          limit: 6,
+        })
+      : [];
   const upcomingOpenSlots = slots.filter((slot) => slot.status === "open");
 
   return (
@@ -75,8 +83,8 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
           <Link href="/settings/profile" className="buttonSecondary">
             Edit profile
           </Link>
-          <Link href="/settings/studio" className="button">
-            {profile?.role === "studio_operator" ? "Manage studio" : "View studio tools"}
+          <Link href={profile?.role === "consumer" ? "/marketplace" : "/settings/studio"} className="button">
+            {profile?.role === "studio_operator" ? "Manage studio" : "Open marketplace"}
           </Link>
           {activeOrganization ? (
             <Link href="/settings/organization" className="buttonSecondary">
@@ -146,8 +154,8 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
                 </div>
                 <div className="card subtle">
                   <span className="helper">Immediate action</span>
-                  <strong>Keep profile current</strong>
-                  <p className="helper">Switch roles from Profile settings later if this account needs studio access.</p>
+                  <strong>Browse live openings</strong>
+                  <p className="helper">Use the marketplace to review bookable slots and reserve a spot.</p>
                 </div>
               </>
             )}
@@ -259,6 +267,43 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             <span className="tag">{members.length} members</span>
             <span className="tag">{pendingInvites.length} pending invites</span>
             <span className="tag">{billingSummary?.effectivePlan.name ?? "No plan snapshot"}</span>
+          </div>
+        </section>
+      ) : null}
+
+      {profile?.role === "consumer" ? (
+        <section className="panel">
+          <p className="eyebrow">Marketplace</p>
+          <h2>Available right now</h2>
+          <div className="list">
+            {consumerMarketplaceSlots.length > 0 ? (
+              consumerMarketplaceSlots.map((slot) => (
+                <article key={slot.id} className="card subtle">
+                  <div className="splitRow">
+                    <div className="stack compactStack">
+                      <strong>{slot.class_type}</strong>
+                      <span className="helper">
+                        {slot.studio?.name ?? "Unknown studio"} · {formatDateTime(slot.start_time)}
+                      </span>
+                    </div>
+                    <span className="tag">{slot.available_spots} spots</span>
+                  </div>
+                  <div className="meta topSpacing">
+                    <span className="tag">{slot.discount_percent}% off</span>
+                    <span className="tag">{formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}</span>
+                  </div>
+                  <div className="actions topSpacing">
+                    <Link href={`/marketplace/${slot.id}`} className="buttonSecondary">
+                      View slot
+                    </Link>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="card subtle">
+                <p className="muted">There are no bookable slots in the marketplace right now.</p>
+              </div>
+            )}
           </div>
         </section>
       ) : null}
