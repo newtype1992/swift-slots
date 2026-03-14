@@ -15,15 +15,13 @@ This repository is intended to be developed primarily with ChatGPT Codex and the
 9. Prefer simple solutions. Avoid unnecessary abstraction or speculative infrastructure.
 10. Validate backend changes with Supabase before continuing.
 
-## GitHub Flow
+## Workflow
 
-Follow GitHub Flow for all meaningful changes:
+Use a lightweight workflow by default:
 
-1. Create a branch from `main`.
-2. Make focused commits.
-3. Open a pull request for review.
-4. Merge only after approval.
-5. Keep `main` deployable.
+1. Work directly in the current branch when that is the fastest path.
+2. Keep commits focused and readable.
+3. Use branches or pull requests only when they help with review, coordination, or rollback safety.
 
 ## Safety Rules
 

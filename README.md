@@ -135,13 +135,11 @@ Production setup should continue to follow the starter's deployment model unless
 
 ## Development Workflow
 
-This repository should follow GitHub Flow:
+This repository can use a lightweight development workflow:
 
-1. Create a branch from `main` for each feature or fix.
-2. Make small, reviewable commits.
-3. Open a pull request for review and discussion.
-4. Merge only after approval.
-5. Keep `main` deployable at all times.
+1. Work directly in the repo when speed matters.
+2. Commit in logical slices so changes stay understandable.
+3. Use branches and pull requests only when they add real value for a larger or riskier change.
 
 ## Out of Scope for the MVP
 
