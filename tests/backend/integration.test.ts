@@ -337,8 +337,8 @@ test("swift slots schema enforces roles, marketplace visibility, and booking bou
   const markPaid = await admin
     .rpc("mark_slot_booking_paid", {
       p_booking_id: bookingResponse.data!.id,
-      p_checkout_session_id: "cs_marketplace_paid",
-      p_payment_intent_id: "pi_marketplace_paid",
+      p_checkout_session_id: `cs_marketplace_paid_${stamp}`,
+      p_payment_intent_id: `pi_marketplace_paid_${stamp}`,
       p_amount_paid: 22.5,
     })
     .single<{ id: string; payment_status: string; amount_paid: number }>();
@@ -372,7 +372,7 @@ test("swift slots schema enforces roles, marketplace visibility, and booking bou
   const cancelBooking = await admin
     .rpc("cancel_slot_booking", {
       p_booking_id: cancelableBooking.data!.id,
-      p_checkout_session_id: "cs_marketplace_expired",
+      p_checkout_session_id: `cs_marketplace_expired_${stamp}`,
     })
     .single<{ id: string; payment_status: string }>();
   assert.equal(cancelBooking.error, null);
@@ -386,6 +386,67 @@ test("swift slots schema enforces roles, marketplace visibility, and booking bou
   assert.equal(slotAfterCancel.error, null);
   assert.equal(slotAfterCancel.data?.available_spots, 1);
   assert.equal(slotAfterCancel.data?.status, "open");
+
+  const retryBooking = await consumerClient
+    .rpc("create_slot_booking", {
+      p_slot_id: cancelableSlotInsert.data!.id,
+    })
+    .single<{ id: string }>();
+  assert.equal(retryBooking.error, null);
+  assert.ok(retryBooking.data?.id);
+
+  const oneSpotSlotInsert = await operatorClient
+    .from("slots")
+    .insert({
+      studio_id: studioInsert.data!.id,
+      class_type: "Late Ride",
+      start_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      class_length_minutes: 45,
+      original_price: 28,
+      discount_percent: 30,
+      available_spots: 1,
+      status: "open",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(oneSpotSlotInsert.error, null);
+
+  const oneSpotBooking = await consumerClient
+    .rpc("create_slot_booking", {
+      p_slot_id: oneSpotSlotInsert.data!.id,
+    })
+    .single<{ id: string }>();
+  assert.equal(oneSpotBooking.error, null);
+
+  const bookingConfirmation = await consumerClient
+    .from("bookings")
+    .select("id, payment_status, slots(id, status, available_spots)")
+    .eq("id", oneSpotBooking.data!.id)
+    .maybeSingle<{
+      id: string;
+      payment_status: string;
+      slots:
+        | {
+            id: string;
+            status: string;
+            available_spots: number;
+          }
+        | {
+            id: string;
+            status: string;
+            available_spots: number;
+          }[]
+        | null;
+    }>();
+  assert.equal(bookingConfirmation.error, null);
+  assert.equal(bookingConfirmation.data?.id, oneSpotBooking.data!.id);
+
+  const confirmedSlot = Array.isArray(bookingConfirmation.data?.slots)
+    ? bookingConfirmation.data?.slots[0] ?? null
+    : bookingConfirmation.data?.slots ?? null;
+  assert.equal(confirmedSlot?.id, oneSpotSlotInsert.data!.id);
+  assert.equal(confirmedSlot?.status, "filled");
+  assert.equal(confirmedSlot?.available_spots, 0);
 
   const forbiddenSlotEdit = await operatorClient
     .from("slots")

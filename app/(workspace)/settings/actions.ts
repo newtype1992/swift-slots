@@ -65,13 +65,28 @@ function parseMontrealDateTimeInput(input: string) {
     .find((part) => part.type === "timeZoneName")
     ?.value.replace("GMT", "");
 
-  if (!offsetValue) {
+  if (offsetValue === undefined) {
     return null;
   }
 
-  const normalizedOffset = offsetValue.includes(":")
-    ? offsetValue
-    : `${offsetValue}:00`;
+  const normalizedOffset = (() => {
+    if (offsetValue === "") {
+      return "Z";
+    }
+
+    const match = offsetValue.match(/^([+-])(\d{1,2})(?::(\d{2}))?$/);
+
+    if (!match) {
+      return null;
+    }
+
+    const [, sign, hours, minutes] = match;
+    return `${sign}${hours.padStart(2, "0")}:${(minutes || "00").padStart(2, "0")}`;
+  })();
+
+  if (!normalizedOffset) {
+    return null;
+  }
 
   const parsed = new Date(`${datePart}T${timePart}:00${normalizedOffset}`);
 

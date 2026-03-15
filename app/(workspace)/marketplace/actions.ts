@@ -7,6 +7,16 @@ import { createStripeServerClient, stripeIsConfigured } from "@/lib/stripe/serve
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+function isNextRedirectError(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof (error as { digest?: unknown }).digest === "string" &&
+      (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+  );
+}
+
 function resolveRedirectTarget(formData: FormData, fallbackPath: string) {
   const redirectTo = String(formData.get("redirectTo") || "").trim();
 
@@ -141,6 +151,10 @@ export async function createBookingAction(formData: FormData) {
 
     redirect(session.url);
   } catch (checkoutError) {
+    if (isNextRedirectError(checkoutError)) {
+      throw checkoutError;
+    }
+
     const admin = createSupabaseAdminClient();
     await admin.rpc("cancel_slot_booking", {
       p_booking_id: booking.id,
