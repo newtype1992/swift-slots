@@ -1,6 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { discountedPrice, getBookingConfirmation } from "@/lib/marketplace/server";
+import { createStripeServerClient, stripeIsConfigured } from "@/lib/stripe/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function resolveRedirectTarget(formData: FormData, fallbackPath: string) {
@@ -46,7 +50,11 @@ export async function createBookingAction(formData: FormData) {
   const slotId = String(formData.get("slotId") || "").trim();
   const fallback = slotId ? `/marketplace/${slotId}` : "/marketplace";
   const redirectTo = resolveRedirectTarget(formData, fallback);
-  const { supabase } = await requireAuthenticatedConsumer();
+  const { supabase, user } = await requireAuthenticatedConsumer();
+
+  if (!stripeIsConfigured()) {
+    redirect(withFlash(redirectTo, "error", "Stripe is not configured yet for booking payments."));
+  }
 
   const { data, error } = await supabase
     .rpc("create_slot_booking", {
@@ -58,5 +66,93 @@ export async function createBookingAction(formData: FormData) {
     redirect(withFlash(redirectTo, "error", error?.message || "Unable to create booking."));
   }
 
-  redirect(`/marketplace/bookings/${data.id}?message=Booking%20confirmed.`);
+  const booking = await getBookingConfirmation({
+    supabase,
+    bookingId: data.id,
+  });
+
+  if (!booking?.slot || !booking.slot.studio) {
+    const admin = createSupabaseAdminClient();
+    await admin.rpc("cancel_slot_booking", {
+      p_booking_id: data.id,
+      p_checkout_session_id: null,
+    });
+    redirect(withFlash(redirectTo, "error", "The booking could not be prepared for checkout."));
+  }
+
+  const stripe = createStripeServerClient();
+  const origin = (await headers()).get("origin") || process.env.APP_URL || "http://localhost:3000";
+  const unitAmount = Math.round(discountedPrice(booking.slot.original_price, booking.slot.discount_percent) * 100);
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: user.email ?? undefined,
+      success_url: `${origin}/marketplace/bookings/${booking.id}?message=Payment%20received.`,
+      cancel_url: `${origin}${withFlash(
+        redirectTo,
+        "message",
+        "Checkout canceled. The reservation will release automatically if payment is not completed."
+      )}`,
+      metadata: {
+        booking_id: booking.id,
+        slot_id: booking.slot.id,
+        studio_id: booking.slot.studio.id,
+      },
+      payment_intent_data: {
+        metadata: {
+          booking_id: booking.id,
+          slot_id: booking.slot.id,
+          studio_id: booking.slot.studio.id,
+        },
+      },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "cad",
+            unit_amount: unitAmount,
+            product_data: {
+              name: `${booking.slot.class_type} - ${booking.slot.studio.name}`,
+              description: `${booking.slot.studio.location_text} · ${booking.slot.discount_percent}% off`,
+            },
+          },
+        },
+      ],
+    });
+
+    const admin = createSupabaseAdminClient();
+    const { error: updateError } = await admin
+      .from("bookings")
+      .update({
+        provider_checkout_session_id: session.id,
+        checkout_expires_at: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : null,
+      })
+      .eq("id", booking.id)
+      .eq("payment_status", "pending");
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    if (!session.url) {
+      throw new Error("Stripe checkout did not return a redirect URL.");
+    }
+
+    redirect(session.url);
+  } catch (checkoutError) {
+    const admin = createSupabaseAdminClient();
+    await admin.rpc("cancel_slot_booking", {
+      p_booking_id: booking.id,
+      p_checkout_session_id: null,
+    });
+
+    redirect(
+      withFlash(
+        redirectTo,
+        "error",
+        checkoutError instanceof Error ? checkoutError.message : "Unable to start Stripe checkout."
+      )
+    );
+  }
 }

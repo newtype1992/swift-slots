@@ -130,7 +130,7 @@ export default async function MarketplaceSlotDetailPage({
             <input type="hidden" name="slotId" value={slot.id} />
             <input type="hidden" name="redirectTo" value={`/marketplace/${slot.id}`} />
             <button type="submit" className="button">
-              Reserve spot
+              Reserve spot and pay
             </button>
           </form>
           <div className="actions topSpacing">

@@ -58,6 +58,9 @@ export default async function BookingConfirmationPage({ params, searchParams }: 
         </p>
         {query.error ? <p className="message">Error: {query.error}</p> : null}
         {query.message ? <p className="message">{query.message}</p> : null}
+        {booking.payment_status !== "paid" ? (
+          <p className="message">Payment is still processing. Refresh this page shortly if the status does not update.</p>
+        ) : null}
       </section>
 
       <section className="grid two">

@@ -334,6 +334,59 @@ test("swift slots schema enforces roles, marketplace visibility, and booking bou
   assert.equal(slotAfterBooking.data?.available_spots, 1);
   assert.equal(slotAfterBooking.data?.status, "open");
 
+  const markPaid = await admin
+    .rpc("mark_slot_booking_paid", {
+      p_booking_id: bookingResponse.data!.id,
+      p_checkout_session_id: "cs_marketplace_paid",
+      p_payment_intent_id: "pi_marketplace_paid",
+      p_amount_paid: 22.5,
+    })
+    .single<{ id: string; payment_status: string; amount_paid: number }>();
+  assert.equal(markPaid.error, null);
+  assert.equal(markPaid.data?.payment_status, "paid");
+  assert.equal(markPaid.data?.amount_paid, 22.5);
+
+  const cancelableSlotInsert = await operatorClient
+    .from("slots")
+    .insert({
+      studio_id: studioInsert.data!.id,
+      class_type: "Noon Strength",
+      start_time: new Date(Date.now() + 90 * 60 * 1000).toISOString(),
+      class_length_minutes: 50,
+      original_price: 40,
+      discount_percent: 15,
+      available_spots: 1,
+      status: "open",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(cancelableSlotInsert.error, null);
+
+  const cancelableBooking = await consumerClient
+    .rpc("create_slot_booking", {
+      p_slot_id: cancelableSlotInsert.data!.id,
+    })
+    .single<{ id: string }>();
+  assert.equal(cancelableBooking.error, null);
+
+  const cancelBooking = await admin
+    .rpc("cancel_slot_booking", {
+      p_booking_id: cancelableBooking.data!.id,
+      p_checkout_session_id: "cs_marketplace_expired",
+    })
+    .single<{ id: string; payment_status: string }>();
+  assert.equal(cancelBooking.error, null);
+  assert.equal(cancelBooking.data?.payment_status, "canceled");
+
+  const slotAfterCancel = await operatorClient
+    .from("slots")
+    .select("available_spots, status")
+    .eq("id", cancelableSlotInsert.data!.id)
+    .maybeSingle<{ available_spots: number; status: string }>();
+  assert.equal(slotAfterCancel.error, null);
+  assert.equal(slotAfterCancel.data?.available_spots, 1);
+  assert.equal(slotAfterCancel.data?.status, "open");
+
   const forbiddenSlotEdit = await operatorClient
     .from("slots")
     .update({ class_type: "Edited Class Name" })

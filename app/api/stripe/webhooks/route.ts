@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { syncCheckoutCompletion, syncStripeSubscription } from "@/lib/billing/webhooks";
+import { syncBookingCheckoutCompleted, syncBookingCheckoutExpired } from "@/lib/marketplace/payments";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createStripeServerClient } from "@/lib/stripe/server";
 
@@ -27,15 +28,20 @@ export async function POST(request: Request) {
     const payload = await request.text();
     const stripe = createStripeServerClient();
     const event = stripe.webhooks.constructEvent(payload, signature, requiredEnv("STRIPE_WEBHOOK_SECRET"));
+    const admin = createSupabaseAdminClient();
 
     switch (event.type) {
       case "checkout.session.completed":
-        await syncCheckoutCompletion(createSupabaseAdminClient(), event.data.object as Stripe.Checkout.Session);
+        await syncCheckoutCompletion(admin, event.data.object as Stripe.Checkout.Session);
+        await syncBookingCheckoutCompleted(admin, event.data.object as Stripe.Checkout.Session);
+        break;
+      case "checkout.session.expired":
+        await syncBookingCheckoutExpired(admin, event.data.object as Stripe.Checkout.Session);
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted":
-        await syncStripeSubscription(createSupabaseAdminClient(), event.data.object as Stripe.Subscription);
+        await syncStripeSubscription(admin, event.data.object as Stripe.Subscription);
         break;
       default:
         break;
