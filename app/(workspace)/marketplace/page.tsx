@@ -55,16 +55,25 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Marketplace</p>
-        <h1>Book a last-minute class</h1>
-        <p className="muted">
-          Available slots are already filtered by the booking rules in Supabase, including the 15-minute lock window.
-        </p>
+        <div className="sectionHeader">
+          <div className="stack compactStack">
+            <p className="eyebrow">Marketplace</p>
+            <h1>Book a last-minute class</h1>
+            <p className="muted">
+              Available inventory is already filtered by Supabase booking rules, including the 15-minute lock window.
+            </p>
+          </div>
+          <div className="metricCard">
+            <p className="eyebrow">Visible now</p>
+            <div className="metricValue">{slots.length}</div>
+            <p className="helper">Slots open to this consumer right now.</p>
+          </div>
+        </div>
         {params.error ? <p className="message">Error: {params.error}</p> : null}
         {params.message ? <p className="message">{params.message}</p> : null}
       </section>
 
-      <section className="grid">
+      <section className="grid two">
         {slots.length > 0 ? (
           slots.map((slot) => (
             <article key={slot.id} className="panel">
@@ -73,7 +82,7 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
                   <p className="eyebrow">Open slot</p>
                   <h2>{slot.class_type}</h2>
                   <p className="muted">
-                    {slot.studio?.name ?? "Unknown studio"} · {slot.studio?.location_text ?? "Montreal"}
+                    {slot.studio?.name ?? "Unknown studio"} - {slot.studio?.location_text ?? "Montreal"}
                   </p>
                 </div>
                 <span className="tag">{slot.available_spots} spots left</span>

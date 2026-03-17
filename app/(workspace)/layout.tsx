@@ -21,25 +21,31 @@ export default async function WorkspaceLayout({
     <main className="workspaceLayout">
       <aside className="workspaceSidebar panel">
         <div className="stack">
-          <div>
-            <p className="eyebrow">Swift Slots</p>
-            <h1 className="workspaceHeading">Operator and consumer workspace</h1>
+          <div className="workspaceSidebarSection">
+            <div className="brandBlock">
+              <p className="eyebrow">Swift Slots</p>
+              <span className="brandMeta">Workspace</span>
+            </div>
+            <h1 className="workspaceHeading">Product operations</h1>
             <p className="muted">
-              The shell now centers product role, studio setup, and the next workflow slice while inherited starter tools remain available.
+              A single control surface for operators posting inventory and consumers booking discounted classes.
             </p>
           </div>
 
-          <div className="card subtle">
-            <h3>Current account</h3>
-            <p className="muted">{profile?.email ?? "Unknown email"}</p>
-            <div className="meta">
-              <span className="tag">{profile?.full_name || "No profile name yet"}</span>
-              <span className="tag">{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</span>
+          <div className="workspaceSidebarSection">
+            <h3 className="sectionLabel">Current account</h3>
+            <div className="card subtle">
+              <strong>{profile?.full_name || "No profile name yet"}</strong>
+              <p className="muted">{profile?.email ?? "Unknown email"}</p>
+              <div className="meta topSpacing">
+                <span className="tag">{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</span>
+                <span className="tag">{studio ? "Studio connected" : "No studio linked"}</span>
+              </div>
             </div>
           </div>
 
-          <div className="stack compactStack">
-            <h3 className="sectionLabel">Product status</h3>
+          <div className="workspaceSidebarSection">
+            <h3 className="sectionLabel">Role status</h3>
             {profile?.role === "studio_operator" ? (
               studio ? (
                 <div className="card subtle">
@@ -57,17 +63,17 @@ export default async function WorkspaceLayout({
               )
             ) : (
               <div className="card subtle">
-                <p className="muted">Consumer mode is set. Marketplace browsing and booking will be the next major slice.</p>
+                <p className="muted">Consumer mode is active. Marketplace browsing and booking are available from this workspace.</p>
               </div>
             )}
           </div>
 
-          <div className="stack compactStack">
+          <div className="workspaceSidebarSection">
             <h3 className="sectionLabel">Workspace navigation</h3>
             <WorkspaceNav />
           </div>
 
-          <div className="stack compactStack">
+          <div className="workspaceSidebarSection">
             <h3 className="sectionLabel">Inherited starter workspace</h3>
             {activeOrganization ? (
               <>

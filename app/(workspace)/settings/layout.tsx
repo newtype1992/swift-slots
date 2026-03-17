@@ -8,11 +8,15 @@ export default function SettingsLayout({
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Settings</p>
-        <h1>Swift Slots settings</h1>
-        <p className="muted">
-          Product settings come first. Inherited starter controls remain available while the app is still being adapted.
-        </p>
+        <div className="sectionHeader">
+          <div className="stack compactStack">
+            <p className="eyebrow">Settings</p>
+            <h1>Swift Slots settings</h1>
+            <p className="muted">
+              Product settings come first. Inherited starter controls remain available while the app is still being adapted.
+            </p>
+          </div>
+        </div>
         <SettingsNav />
       </section>
       {children}

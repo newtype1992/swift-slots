@@ -124,7 +124,7 @@ export async function createBookingAction(formData: FormData) {
             unit_amount: unitAmount,
             product_data: {
               name: `${booking.slot.class_type} - ${booking.slot.studio.name}`,
-              description: `${booking.slot.studio.location_text} · ${booking.slot.discount_percent}% off`,
+              description: `${booking.slot.studio.location_text} - ${booking.slot.discount_percent}% off`,
             },
           },
         },

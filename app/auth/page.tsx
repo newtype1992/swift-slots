@@ -15,13 +15,27 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
 
   return (
     <main className="grid two">
-      <section className="panel">
-        <p className="eyebrow">Access</p>
-        <h1>Sign in to Swift Slots</h1>
-        <p className="muted">
-          Use the local Supabase stack to create an account, establish a session, and move directly into the Swift Slots workspace.
-        </p>
+      <section className="hero">
         <div className="stack">
+          <p className="eyebrow">Access</p>
+          <h1>Sign in to Swift Slots</h1>
+          <p className="muted">
+            Use the local Supabase stack to create an account, establish a session, and move directly into the workspace.
+          </p>
+        </div>
+        <div className="metricGrid">
+          <div className="metricCard">
+            <p className="eyebrow">Operator</p>
+            <div className="metricValue">Studios</div>
+            <p className="helper">Set up the studio identity and publish short-notice class inventory.</p>
+          </div>
+          <div className="metricCard">
+            <p className="eyebrow">Consumer</p>
+            <div className="metricValue">Bookings</div>
+            <p className="helper">Browse live openings and complete checkout with Stripe test mode.</p>
+          </div>
+        </div>
+        <div className="heroAside">
           <p className="helper">No seeded user is required. Local email confirmations are disabled right now.</p>
           <Link href="http://127.0.0.1:54324" className="buttonSecondary">
             Open local inbox
@@ -31,7 +45,12 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
 
       <section className="grid">
         <div className="panel">
-          <h2>Sign in</h2>
+          <div className="sectionHeader">
+            <div className="stack compactStack">
+              <p className="eyebrow">Existing account</p>
+              <h2>Sign in</h2>
+            </div>
+          </div>
           {params.error ? <p className="message">Error: {params.error}</p> : null}
           {params.message ? <p className="message">{params.message}</p> : null}
           <form action={signInAction} className="form">
@@ -51,7 +70,12 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
         </div>
 
         <div className="panel">
-          <h2>Create account</h2>
+          <div className="sectionHeader">
+            <div className="stack compactStack">
+              <p className="eyebrow">New account</p>
+              <h2>Create account</h2>
+            </div>
+          </div>
           <form action={signUpAction} className="form">
             <input type="hidden" name="next" value={next} />
             <div className="field">

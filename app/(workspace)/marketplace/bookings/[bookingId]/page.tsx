@@ -51,11 +51,16 @@ export default async function BookingConfirmationPage({ params, searchParams }: 
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Booking confirmed</p>
-        <h1>{booking.slot.class_type}</h1>
-        <p className="muted">
-          {booking.slot.studio?.name ?? "Unknown studio"} · {booking.slot.studio?.location_text ?? "Montreal"}
-        </p>
+        <div className="sectionHeader">
+          <div className="stack compactStack">
+            <p className="eyebrow">Booking confirmed</p>
+            <h1>{booking.slot.class_type}</h1>
+            <p className="muted">
+              {booking.slot.studio?.name ?? "Unknown studio"} - {booking.slot.studio?.location_text ?? "Montreal"}
+            </p>
+          </div>
+          <div className={`tag status-${booking.payment_status}`}>{booking.payment_status}</div>
+        </div>
         {query.error ? <p className="message">Error: {query.error}</p> : null}
         {query.message ? <p className="message">{query.message}</p> : null}
         {booking.payment_status !== "paid" ? (

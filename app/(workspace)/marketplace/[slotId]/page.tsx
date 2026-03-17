@@ -70,11 +70,20 @@ export default async function MarketplaceSlotDetailPage({
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Marketplace</p>
-        <h1>{slot.class_type}</h1>
-        <p className="muted">
-          {slot.studio?.name ?? "Unknown studio"} · {slot.studio?.location_text ?? "Montreal"}
-        </p>
+        <div className="sectionHeader">
+          <div className="stack compactStack">
+            <p className="eyebrow">Marketplace</p>
+            <h1>{slot.class_type}</h1>
+            <p className="muted">
+              {slot.studio?.name ?? "Unknown studio"} - {slot.studio?.location_text ?? "Montreal"}
+            </p>
+          </div>
+          <div className="metricCard">
+            <p className="eyebrow">Live inventory</p>
+            <div className="metricValue">{slot.available_spots}</div>
+            <p className="helper">Spots still available for this class.</p>
+          </div>
+        </div>
         {query.error ? <p className="message">Error: {query.error}</p> : null}
         {query.message ? <p className="message">{query.message}</p> : null}
       </section>

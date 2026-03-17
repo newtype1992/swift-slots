@@ -70,28 +70,47 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Overview</p>
-        <h1>{profile?.role === "studio_operator" ? "Studio operator overview" : "Consumer overview"}</h1>
-        <p className="muted">
-          {profile?.role === "studio_operator"
-            ? "Use this screen to track studio setup and the open slots you are publishing into the Swift Slots marketplace."
-            : "Consumer mode is active. The marketplace flow comes next, but your account and role setup are already in place."}
-        </p>
+        <div className="sectionHeader">
+          <div className="stack compactStack">
+            <p className="eyebrow">Overview</p>
+            <h1>{profile?.role === "studio_operator" ? "Studio operator overview" : "Consumer overview"}</h1>
+            <p className="muted">
+              {profile?.role === "studio_operator"
+                ? "Track studio readiness, live slot inventory, and the product state attached to this account."
+                : "Review the account state, current marketplace supply, and the booking path available to this consumer profile."}
+            </p>
+          </div>
+          <div className="sectionHeaderActions">
+            <Link href="/settings/profile" className="buttonSecondary">
+              Edit profile
+            </Link>
+            <Link href={profile?.role === "consumer" ? "/marketplace" : "/settings/studio"} className="button">
+              {profile?.role === "studio_operator" ? "Manage studio" : "Open marketplace"}
+            </Link>
+          </div>
+        </div>
         {params.error ? <p className="message">Error: {params.error}</p> : null}
         {params.message ? <p className="message">{params.message}</p> : null}
-        <div className="actions">
-          <Link href="/settings/profile" className="buttonSecondary">
-            Edit profile
-          </Link>
-          <Link href={profile?.role === "consumer" ? "/marketplace" : "/settings/studio"} className="button">
-            {profile?.role === "studio_operator" ? "Manage studio" : "Open marketplace"}
-          </Link>
-          {activeOrganization ? (
-            <Link href="/settings/organization" className="buttonSecondary">
-              Starter org settings
-            </Link>
-          ) : null}
-        </div>
+      </section>
+
+      <section className="metricGrid">
+        <article className="metricCard">
+          <p className="eyebrow">Account role</p>
+          <div className="metricValue">{profile?.role === "studio_operator" ? "Operator" : "Consumer"}</div>
+          <p className="helper">{organizations.length} inherited workspaces remain attached to this account.</p>
+        </article>
+        <article className="metricCard">
+          <p className="eyebrow">{profile?.role === "studio_operator" ? "Open slots" : "Live supply"}</p>
+          <div className="metricValue">{profile?.role === "studio_operator" ? upcomingOpenSlots.length : consumerMarketplaceSlots.length}</div>
+          <p className="helper">
+            {profile?.role === "studio_operator" ? "Current operator inventory visible in the product." : "Bookable slots currently visible to this consumer."}
+          </p>
+        </article>
+        <article className="metricCard">
+          <p className="eyebrow">Starter layer</p>
+          <div className="metricValue">{activeOrganization ? activeRole ?? "member" : "None"}</div>
+          <p className="helper">{activeOrganization ? activeOrganization.name : "No active inherited workspace is selected."}</p>
+        </article>
       </section>
 
       <section className="grid two">
@@ -121,7 +140,7 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             </div>
           ) : (
             <div className="card subtle topSpacing">
-              <p className="muted">Consumer mode is ready. Marketplace browsing and booking are still to be implemented.</p>
+              <p className="muted">Consumer mode is active. Use the marketplace to browse and book available slots.</p>
             </div>
           )}
         </article>
@@ -150,7 +169,7 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
                 <div className="card subtle">
                   <span className="helper">Account role</span>
                   <strong>Consumer mode active</strong>
-                  <p className="helper">This account is prepared for marketplace browsing once the consumer flow is built.</p>
+                  <p className="helper">The booking flow is available now, with Stripe checkout connected for smoke testing.</p>
                 </div>
                 <div className="card subtle">
                   <span className="helper">Immediate action</span>
@@ -165,53 +184,18 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
 
       {profile?.role === "studio_operator" ? (
         <>
-          <section className="grid three">
-            <article className="card subtle">
-              <h3>Studio readiness</h3>
-              <div className="list compact">
-                <div className="splitRow">
-                  <span className="muted">Studio profile</span>
-                  <strong>{studio ? "Ready" : "Missing"}</strong>
-                </div>
-                <div className="splitRow">
-                  <span className="muted">Categories</span>
-                  <strong>{studio?.class_categories.length ?? 0}</strong>
-                </div>
-              </div>
-            </article>
-
-            <article className="card subtle">
-              <h3>Open inventory</h3>
-              <div className="list compact">
-                <div className="splitRow">
-                  <span className="muted">Visible open slots</span>
-                  <strong>{upcomingOpenSlots.length}</strong>
-                </div>
-                <div className="splitRow">
-                  <span className="muted">Total listed slots</span>
-                  <strong>{slots.length}</strong>
-                </div>
-              </div>
-            </article>
-
-            <article className="card subtle">
-              <h3>Inherited starter state</h3>
-              <div className="list compact">
-                <div className="splitRow">
-                  <span className="muted">Workspace role</span>
-                  <strong>{activeRole ?? "Not set"}</strong>
-                </div>
-                <div className="splitRow">
-                  <span className="muted">Inherited orgs</span>
-                  <strong>{organizations.length}</strong>
-                </div>
-              </div>
-            </article>
-          </section>
-
           <section className="panel">
-            <p className="eyebrow">Slots</p>
-            <h2>{studio ? `${studio.name} recent slots` : "No studio slots yet"}</h2>
+            <div className="sectionHeader">
+              <div className="stack compactStack">
+                <p className="eyebrow">Slots</p>
+                <h2>{studio ? `${studio.name} recent slots` : "No studio slots yet"}</h2>
+              </div>
+              <div className="sectionHeaderActions">
+                <Link href="/settings/studio" className="buttonSecondary">
+                  Open studio settings
+                </Link>
+              </div>
+            </div>
             <div className="list">
               {slots.length > 0 ? (
                 slots.slice(0, 6).map((slot) => (
@@ -242,8 +226,17 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
 
       {activeOrganization ? (
         <section className="panel">
-          <p className="eyebrow">Starter carryover</p>
-          <h2>{activeOrganization.name} inherited workspace activity</h2>
+          <div className="sectionHeader">
+            <div className="stack compactStack">
+              <p className="eyebrow">Starter carryover</p>
+              <h2>{activeOrganization.name} inherited workspace activity</h2>
+            </div>
+            <div className="sectionHeaderActions">
+              <Link href="/settings/organization" className="buttonSecondary">
+                Starter org settings
+              </Link>
+            </div>
+          </div>
           <div className="list">
             {visibleActivityLogs.length > 0 ? (
               visibleActivityLogs.slice(0, 4).map((activity) => (
@@ -273,8 +266,17 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
 
       {profile?.role === "consumer" ? (
         <section className="panel">
-          <p className="eyebrow">Marketplace</p>
-          <h2>Available right now</h2>
+          <div className="sectionHeader">
+            <div className="stack compactStack">
+              <p className="eyebrow">Marketplace</p>
+              <h2>Available right now</h2>
+            </div>
+            <div className="sectionHeaderActions">
+              <Link href="/marketplace" className="buttonSecondary">
+                Open full marketplace
+              </Link>
+            </div>
+          </div>
           <div className="list">
             {consumerMarketplaceSlots.length > 0 ? (
               consumerMarketplaceSlots.map((slot) => (
@@ -283,7 +285,7 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
                     <div className="stack compactStack">
                       <strong>{slot.class_type}</strong>
                       <span className="helper">
-                        {slot.studio?.name ?? "Unknown studio"} · {formatDateTime(slot.start_time)}
+                        {slot.studio?.name ?? "Unknown studio"} - {formatDateTime(slot.start_time)}
                       </span>
                     </div>
                     <span className="tag">{slot.available_spots} spots</span>
