@@ -36,7 +36,7 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
           </div>
         </div>
         <div className="heroAside">
-          <p className="helper">No seeded user is required. Local email confirmations are disabled right now.</p>
+          <p className="helper">Seeded local demo users are available after `npm run reset:local`. Their credentials live in the README.</p>
           <Link href="http://127.0.0.1:54324" className="buttonSecondary">
             Open local inbox
           </Link>

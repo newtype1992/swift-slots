@@ -103,13 +103,48 @@ supabase start
 - Keep the existing starter environment variables unless a new variable is genuinely required.
 - Add Stripe and Resend values only when those flows are being exercised.
 
-5. Start the app.
+5. Reset and seed local demo data.
+
+This clears local auth users and rebuilds deterministic Swift Slots demo data, including studio operators, a consumer with a saved fallback address, open/locked/filled slots, and seeded booking history.
+
+```bash
+npm run reset:local
+```
+
+If you already reset the database separately and only want to recreate the demo data, run:
+
+```bash
+npm run seed:local
+```
+
+6. Start the app.
 
 ```bash
 npm run dev
 ```
 
-6. Open `http://localhost:3000`.
+7. Open `http://localhost:3000`.
+
+## Local Demo Accounts
+
+After `npm run reset:local`, these local accounts are available:
+
+- `studio.olive@swiftslots.test` / `password123`
+- `studio.pulse@swiftslots.test` / `password123`
+- `consumer.demo@swiftslots.test` / `password123`
+- `consumer.history@swiftslots.test` / `password123`
+
+Seeded fallback address for the primary consumer:
+
+- `consumer.demo@swiftslots.test`
+- `5415 Avenue du Parc, Unit 204, Montreal, QC H2V 4G9, Canada`
+
+Seeded local data includes:
+
+- 2 studio operator accounts with studio profiles
+- 1 primary consumer account with saved-address fallback coordinates
+- 1 extra consumer account with paid and canceled booking history
+- open, locked, filled, and expired slots across multiple class types and price points
 
 ## Verification
 

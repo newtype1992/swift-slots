@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { MarketplaceSlot } from "@/lib/marketplace/server";
 import { discountedPrice } from "@/lib/marketplace/server";
 import { type Coordinates, rankMarketplaceSlots } from "@/lib/location";
@@ -13,6 +13,7 @@ type MarketplaceResultsProps = {
 };
 
 type LocationMode = "device" | "profile" | "none";
+type StartWindowFilter = "any" | "2h" | "4h" | "today";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("en-CA", {
@@ -38,13 +39,60 @@ function formatDistance(distanceKm: number) {
   return `${distanceKm.toFixed(1)} km`;
 }
 
+function filterMarketplaceSlots(
+  slots: MarketplaceSlot[],
+  filters: {
+    classType: string;
+    startWindow: StartWindowFilter;
+    maxPrice: string;
+    minDiscount: string;
+  }
+) {
+  const now = Date.now();
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  const maxPrice = filters.maxPrice ? Number(filters.maxPrice) : null;
+  const minDiscount = Number(filters.minDiscount) || 0;
+
+  return slots.filter((slot) => {
+    if (filters.classType !== "all" && slot.class_type !== filters.classType) {
+      return false;
+    }
+
+    const discountedAmount = discountedPrice(slot.original_price, slot.discount_percent);
+
+    if (maxPrice !== null && discountedAmount > maxPrice) {
+      return false;
+    }
+
+    if (slot.discount_percent < minDiscount) {
+      return false;
+    }
+
+    const slotStart = new Date(slot.start_time).getTime();
+
+    if (filters.startWindow === "2h" && slotStart > now + 2 * 60 * 60 * 1000) {
+      return false;
+    }
+
+    if (filters.startWindow === "4h" && slotStart > now + 4 * 60 * 60 * 1000) {
+      return false;
+    }
+
+    if (filters.startWindow === "today" && slotStart > endOfToday.getTime()) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 export function MarketplaceResults({
   slots,
   savedCoordinates,
   savedAddressLabel,
 }: MarketplaceResultsProps) {
-  const initialRanked = useMemo(() => rankMarketplaceSlots(slots, savedCoordinates), [slots, savedCoordinates]);
-  const [rankedSlots, setRankedSlots] = useState(initialRanked);
+  const [activeCoordinates, setActiveCoordinates] = useState<Coordinates | null>(savedCoordinates);
   const [locationMode, setLocationMode] = useState<LocationMode>(savedCoordinates ? "profile" : "none");
   const [locationMessage, setLocationMessage] = useState(
     savedCoordinates
@@ -52,19 +100,46 @@ export function MarketplaceResults({
       : "Allow location access to sort nearby openings, or add a saved address in your profile."
   );
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [classTypeFilter, setClassTypeFilter] = useState("all");
+  const [startWindowFilter, setStartWindowFilter] = useState<StartWindowFilter>("any");
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
+  const [minDiscountFilter, setMinDiscountFilter] = useState("0");
 
-  useEffect(() => {
-    setRankedSlots(initialRanked);
-  }, [initialRanked]);
+  const classTypeOptions = useMemo(
+    () => Array.from(new Set(slots.map((slot) => slot.class_type))).sort((a, b) => a.localeCompare(b)),
+    [slots]
+  );
+
+  const deferredFilters = useDeferredValue({
+    classType: classTypeFilter,
+    startWindow: startWindowFilter,
+    maxPrice: maxPriceFilter,
+    minDiscount: minDiscountFilter,
+  });
+
+  const filteredRankedSlots = useMemo(() => {
+    const filtered = filterMarketplaceSlots(slots, deferredFilters);
+    return rankMarketplaceSlots(filtered, activeCoordinates);
+  }, [activeCoordinates, deferredFilters, slots]);
+
+  const activeFilterCount = useMemo(() => {
+    return [
+      classTypeFilter !== "all",
+      startWindowFilter !== "any",
+      maxPriceFilter !== "",
+      minDiscountFilter !== "0",
+    ].filter(Boolean).length;
+  }, [classTypeFilter, maxPriceFilter, minDiscountFilter, startWindowFilter]);
 
   function applyCurrentLocation(coords: Coordinates) {
-    setRankedSlots(rankMarketplaceSlots(slots, coords));
+    setActiveCoordinates(coords);
     setLocationMode("device");
     setLocationMessage("Using your current device location for nearby ranking.");
   }
 
   function requestCurrentLocation() {
     if (!navigator.geolocation) {
+      setActiveCoordinates(savedCoordinates);
       setLocationMode(savedCoordinates ? "profile" : "none");
       setLocationMessage(
         savedCoordinates
@@ -86,6 +161,7 @@ export function MarketplaceResults({
       },
       () => {
         setIsRequestingLocation(false);
+        setActiveCoordinates(savedCoordinates);
         setLocationMode(savedCoordinates ? "profile" : "none");
         setLocationMessage(
           savedCoordinates
@@ -106,6 +182,13 @@ export function MarketplaceResults({
     // Run once when the page hydrates to satisfy the device-first requirement.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function resetFilters() {
+    setClassTypeFilter("all");
+    setStartWindowFilter("any");
+    setMaxPriceFilter("");
+    setMinDiscountFilter("0");
+  }
 
   return (
     <div className="grid">
@@ -129,9 +212,86 @@ export function MarketplaceResults({
         </div>
       </section>
 
+      <section className="panel">
+        <div className="sectionHeader">
+          <div className="stack compactStack">
+            <p className="eyebrow">Filters</p>
+            <h2>Refine what shows up</h2>
+            <p className="muted">
+              Narrow by class type, how soon the class starts, minimum discount, and the maximum discounted price you are willing to pay.
+            </p>
+          </div>
+          <div className="sectionHeaderActions">
+            <span className="tag">
+              {filteredRankedSlots.length} of {slots.length} visible
+            </span>
+            {activeFilterCount > 0 ? (
+              <button type="button" className="buttonSecondary" onClick={resetFilters}>
+                Clear {activeFilterCount} filter{activeFilterCount === 1 ? "" : "s"}
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <div className="grid two topSpacing">
+          <div className="field">
+            <label htmlFor="marketplace-class-type">Class type</label>
+            <select
+              id="marketplace-class-type"
+              value={classTypeFilter}
+              onChange={(event) => setClassTypeFilter(event.target.value)}
+            >
+              <option value="all">All class types</option>
+              {classTypeOptions.map((classType) => (
+                <option key={classType} value={classType}>
+                  {classType}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="marketplace-start-window">Starts within</label>
+            <select
+              id="marketplace-start-window"
+              value={startWindowFilter}
+              onChange={(event) => setStartWindowFilter(event.target.value as StartWindowFilter)}
+            >
+              <option value="any">Any time</option>
+              <option value="2h">Next 2 hours</option>
+              <option value="4h">Next 4 hours</option>
+              <option value="today">Today</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="marketplace-max-price">Max discounted price</label>
+            <select id="marketplace-max-price" value={maxPriceFilter} onChange={(event) => setMaxPriceFilter(event.target.value)}>
+              <option value="">Any price</option>
+              <option value="15">$15 or less</option>
+              <option value="25">$25 or less</option>
+              <option value="35">$35 or less</option>
+              <option value="50">$50 or less</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="marketplace-min-discount">Minimum discount</label>
+            <select
+              id="marketplace-min-discount"
+              value={minDiscountFilter}
+              onChange={(event) => setMinDiscountFilter(event.target.value)}
+            >
+              <option value="0">Any discount</option>
+              <option value="10">10% or more</option>
+              <option value="20">20% or more</option>
+              <option value="30">30% or more</option>
+              <option value="40">40% or more</option>
+              <option value="50">50% or more</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
       <section className="grid two">
-        {rankedSlots.length > 0 ? (
-          rankedSlots.map(({ slot, distanceKm }) => (
+        {filteredRankedSlots.length > 0 ? (
+          filteredRankedSlots.map(({ slot, distanceKm }) => (
             <article key={slot.id} className="panel">
               <div className="splitRow">
                 <div className="stack compactStack">
@@ -161,14 +321,22 @@ export function MarketplaceResults({
           ))
         ) : (
           <div className="panel">
-            <h2>No bookable slots right now</h2>
+            <h2>{slots.length > 0 ? "No slots match these filters" : "No bookable slots right now"}</h2>
             <p className="muted">
-              The marketplace is empty at the moment. Open slots will appear here once studios publish them far enough ahead of class start.
+              {slots.length > 0
+                ? "Try widening the filters or clearing them to see more bookable classes."
+                : "The marketplace is empty at the moment. Open slots will appear here once studios publish them far enough ahead of class start."}
             </p>
+            {slots.length > 0 && activeFilterCount > 0 ? (
+              <div className="actions topSpacing">
+                <button type="button" className="buttonSecondary" onClick={resetFilters}>
+                  Clear filters
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </section>
     </div>
   );
 }
-

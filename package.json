@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:backend": "tsx --test tests/backend/integration.test.ts"
+    "test:backend": "tsx --test tests/backend/integration.test.ts",
+    "seed:local": "tsx scripts/seed-local.ts",
+    "reset:local": "supabase db reset && npm run seed:local"
   },
   "dependencies": {
     "@mapbox/search-js-react": "^1.5.1",
