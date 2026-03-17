@@ -8,6 +8,15 @@ export type Profile = {
   email: string | null;
   full_name: string | null;
   role: "studio_operator" | "consumer";
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
+  country_code: string;
+  latitude: number | null;
+  longitude: number | null;
+  location_updated_at: string | null;
 };
 
 export type OrganizationMember = {
@@ -105,7 +114,13 @@ export async function requireWorkspaceShellContext() {
   }
 
   const [{ data: profile }, activeContext] = await Promise.all([
-    supabase.from("profiles").select("id, email, full_name, role").eq("id", user.id).maybeSingle<Profile>(),
+    supabase
+      .from("profiles")
+      .select(
+        "id, email, full_name, role, address_line1, address_line2, city, province, postal_code, country_code, latitude, longitude, location_updated_at"
+      )
+      .eq("id", user.id)
+      .maybeSingle<Profile>(),
     getActiveOrganizationContext(supabase, user.id),
   ]);
 

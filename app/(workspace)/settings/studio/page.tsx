@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddressFields } from "@/components/address-fields";
 import { createSlotAction, upsertStudioProfileAction } from "../actions";
 import { getOperatorStudioSnapshot } from "@/lib/studios/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
@@ -92,31 +93,24 @@ export default async function StudioSettingsPage({ searchParams }: StudioSetting
               <label htmlFor="studio-slug">Studio slug</label>
               <input id="studio-slug" name="slug" type="text" defaultValue={studio?.slug ?? ""} placeholder="auto-generated-if-empty" />
             </div>
-            <div className="field">
-              <label htmlFor="studio-location">Street address</label>
-              <input
-                id="studio-location"
-                name="locationText"
-                type="text"
-                defaultValue={studio?.location_text ?? ""}
-                placeholder="123 Rue Example, Montreal"
-                required
-              />
-            </div>
-            <div className="grid two">
-              <div className="field">
-                <label htmlFor="studio-city">City</label>
-                <input id="studio-city" name="city" type="text" defaultValue={studio?.city ?? "Montreal"} required />
-              </div>
-              <div className="field">
-                <label htmlFor="studio-province">Province</label>
-                <input id="studio-province" name="province" type="text" defaultValue={studio?.province ?? "QC"} required />
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="studio-postal-code">Postal code</label>
-              <input id="studio-postal-code" name="postalCode" type="text" defaultValue={studio?.postal_code ?? ""} />
-            </div>
+            <AddressFields
+              section="studio"
+              addressLine1Name="locationText"
+              addressLine1Id="studio-location"
+              addressLine1Label="Street address"
+              addressLine1Value={studio?.location_text}
+              cityName="city"
+              cityId="studio-city"
+              cityValue={studio?.city ?? "Montreal"}
+              provinceName="province"
+              provinceId="studio-province"
+              provinceValue={studio?.province ?? "QC"}
+              postalCodeName="postalCode"
+              postalCodeId="studio-postal-code"
+              postalCodeValue={studio?.postal_code}
+              helperText="Used for discovery ranking and fallback distance calculations."
+              addressLine1Required
+            />
             <div className="field">
               <label htmlFor="studio-categories">Class categories</label>
               <input

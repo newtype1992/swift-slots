@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { discountedPrice, getMarketplaceSlots } from "@/lib/marketplace/server";
+import { formatAddress, getProfileCoordinates } from "@/lib/location";
+import { getMarketplaceSlots } from "@/lib/marketplace/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
+import { MarketplaceResults } from "./marketplace-results";
 
 type MarketplacePageProps = {
   searchParams?: Promise<{
@@ -8,22 +10,6 @@ type MarketplacePageProps = {
     message?: string;
   }>;
 };
-
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("en-CA", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function formatMoney(amount: number) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(amount);
-}
 
 export default async function MarketplacePage({ searchParams }: MarketplacePageProps) {
   const params = (await searchParams) ?? {};
@@ -51,6 +37,14 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
   const slots = await getMarketplaceSlots({
     supabase,
   });
+  const savedCoordinates = getProfileCoordinates(profile);
+  const savedAddressLabel = formatAddress({
+    addressLine1: profile?.address_line1,
+    addressLine2: profile?.address_line2,
+    city: profile?.city,
+    province: profile?.province,
+    postalCode: profile?.postal_code,
+  });
 
   return (
     <div className="grid">
@@ -60,7 +54,7 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
             <p className="eyebrow">Marketplace</p>
             <h1>Book a last-minute class</h1>
             <p className="muted">
-              Available inventory is already filtered by Supabase booking rules, including the 15-minute lock window.
+              Available inventory is already filtered by Supabase booking rules, including the 15-minute lock window, and ranked using your device location whenever available.
             </p>
           </div>
           <div className="metricCard">
@@ -73,42 +67,11 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
         {params.message ? <p className="message">{params.message}</p> : null}
       </section>
 
-      <section className="grid two">
-        {slots.length > 0 ? (
-          slots.map((slot) => (
-            <article key={slot.id} className="panel">
-              <div className="splitRow">
-                <div className="stack compactStack">
-                  <p className="eyebrow">Open slot</p>
-                  <h2>{slot.class_type}</h2>
-                  <p className="muted">
-                    {slot.studio?.name ?? "Unknown studio"} - {slot.studio?.location_text ?? "Montreal"}
-                  </p>
-                </div>
-                <span className="tag">{slot.available_spots} spots left</span>
-              </div>
-              <div className="meta topSpacing">
-                <span className="tag">{formatDateTime(slot.start_time)}</span>
-                <span className="tag">{slot.class_length_minutes} min</span>
-                <span className="tag">{slot.discount_percent}% off</span>
-                <span className="tag">{formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}</span>
-              </div>
-              <div className="actions topSpacing">
-                <Link href={`/marketplace/${slot.id}`} className="button">
-                  View slot
-                </Link>
-              </div>
-            </article>
-          ))
-        ) : (
-          <div className="panel">
-            <h2>No bookable slots right now</h2>
-            <p className="muted">
-              The marketplace is empty at the moment. Open slots will appear here once studios publish them far enough ahead of class start.
-            </p>
-          </div>
-        )}
-      </section>
+      <MarketplaceResults
+        slots={slots}
+        savedCoordinates={savedCoordinates}
+        savedAddressLabel={savedAddressLabel || null}
+      />
     </div>
   );
 }

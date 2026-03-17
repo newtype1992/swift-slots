@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { geocodeAddress } from "@/lib/mapbox/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function slugify(input: string) {
@@ -36,6 +37,26 @@ function withFlash(path: string, type: "error" | "message", value: string) {
 
 function normalizeProvince(input: string) {
   return input.trim().toUpperCase() || "QC";
+}
+
+function normalizeCountryCode(input: string) {
+  return input.trim().toUpperCase() || "CA";
+}
+
+function buildLocationMessage(base: string, status: "ok" | "missing_token" | "no_match" | "error", kind: "profile" | "studio") {
+  if (status === "missing_token") {
+    return `${base} ${kind === "profile" ? "Saved-address fallback" : "Studio discovery coordinates"} will activate once Mapbox is configured.`;
+  }
+
+  if (status === "no_match") {
+    return `${base} The address could not be verified, so location-based discovery may be limited until it is corrected.`;
+  }
+
+  if (status === "error") {
+    return `${base} Address verification failed, so location-based discovery may be limited right now.`;
+  }
+
+  return base;
 }
 
 function parseMontrealDateTimeInput(input: string) {
@@ -144,6 +165,13 @@ async function requireStudioOperator() {
 export async function updateProfileAction(formData: FormData) {
   const fullName = String(formData.get("fullName") || "").trim();
   const role = String(formData.get("role") || "consumer").trim();
+  const addressLine1 = String(formData.get("addressLine1") || "").trim();
+  const addressLine2 = String(formData.get("addressLine2") || "").trim();
+  const city = String(formData.get("city") || "").trim();
+  const rawProvince = String(formData.get("province") || "").trim();
+  const province = rawProvince ? normalizeProvince(rawProvince) : "";
+  const postalCode = String(formData.get("postalCode") || "").trim().toUpperCase();
+  const countryCode = normalizeCountryCode(String(formData.get("countryCode") || "CA"));
   const { supabase, user } = await requireAuthenticatedUser();
   const redirectTo = resolveRedirectTarget(formData, "/settings/profile");
 
@@ -165,11 +193,32 @@ export async function updateProfileAction(formData: FormData) {
     }
   }
 
+  const hasSavedAddress = Boolean(addressLine1 || city || rawProvince || postalCode);
+  const geocodeResult = hasSavedAddress
+    ? await geocodeAddress({
+        addressLine1,
+        addressLine2,
+        city,
+        province,
+        postalCode,
+        countryCode,
+      })
+    : null;
+
   const { error } = await supabase
     .from("profiles")
     .update({
       full_name: fullName || null,
       role,
+      address_line1: addressLine1 || null,
+      address_line2: addressLine2 || null,
+      city: city || null,
+      province: province || null,
+      postal_code: postalCode || null,
+      country_code: countryCode,
+      latitude: geocodeResult?.status === "ok" ? geocodeResult.latitude : null,
+      longitude: geocodeResult?.status === "ok" ? geocodeResult.longitude : null,
+      location_updated_at: hasSavedAddress && geocodeResult?.status === "ok" ? new Date().toISOString() : null,
     })
     .eq("id", user.id);
 
@@ -177,7 +226,13 @@ export async function updateProfileAction(formData: FormData) {
     redirect(withFlash(redirectTo, "error", error.message));
   }
 
-  redirect(withFlash(redirectTo, "message", "Profile updated."));
+  redirect(
+    withFlash(
+      redirectTo,
+      "message",
+      geocodeResult ? buildLocationMessage("Profile updated.", geocodeResult.status, "profile") : "Profile updated."
+    )
+  );
 }
 
 export async function upsertStudioProfileAction(formData: FormData) {
@@ -189,6 +244,7 @@ export async function upsertStudioProfileAction(formData: FormData) {
   const city = String(formData.get("city") || "").trim() || "Montreal";
   const province = normalizeProvince(String(formData.get("province") || ""));
   const postalCode = String(formData.get("postalCode") || "").trim();
+  const countryCode = normalizeCountryCode(String(formData.get("countryCode") || "CA"));
   const classCategories = parseCategories(String(formData.get("classCategories") || ""));
   const redirectTo = resolveRedirectTarget(formData, "/settings/studio");
 
@@ -203,6 +259,13 @@ export async function upsertStudioProfileAction(formData: FormData) {
   }
 
   const { supabase, user } = await requireStudioOperator();
+  const geocodeResult = await geocodeAddress({
+    addressLine1: locationText,
+    city,
+    province,
+    postalCode,
+    countryCode,
+  });
 
   const payload = {
     operator_user_id: user.id,
@@ -213,6 +276,8 @@ export async function upsertStudioProfileAction(formData: FormData) {
     city,
     province,
     postal_code: postalCode || null,
+    latitude: geocodeResult.status === "ok" ? geocodeResult.latitude : null,
+    longitude: geocodeResult.status === "ok" ? geocodeResult.longitude : null,
     class_categories: classCategories,
   };
 
@@ -226,7 +291,13 @@ export async function upsertStudioProfileAction(formData: FormData) {
     redirect(withFlash(redirectTo, "error", error.message));
   }
 
-  redirect(withFlash(redirectTo, "message", studioId ? "Studio updated." : "Studio created."));
+  redirect(
+    withFlash(
+      redirectTo,
+      "message",
+      buildLocationMessage(studioId ? "Studio updated." : "Studio created.", geocodeResult.status, "studio")
+    )
+  );
 }
 
 export async function createSlotAction(formData: FormData) {

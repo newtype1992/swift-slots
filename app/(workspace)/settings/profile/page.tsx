@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AddressFields } from "@/components/address-fields";
+import { formatAddress } from "@/lib/location";
 import { updateProfileAction } from "../actions";
 import { getOperatorStudioSnapshot } from "@/lib/studios/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
@@ -20,6 +22,13 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
           userId: user.id,
         })
       : { studio: null };
+  const savedAddress = formatAddress({
+    addressLine1: profile?.address_line1,
+    addressLine2: profile?.address_line2,
+    city: profile?.city,
+    province: profile?.province,
+    postalCode: profile?.postal_code,
+  });
 
   return (
     <div className="grid">
@@ -49,7 +58,7 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
                   ? studio
                     ? `Studio linked: ${studio.name}`
                     : "No studio profile created yet."
-                  : "This account will eventually browse and book marketplace slots."}
+                  : "This account can browse live openings and falls back to the saved address if device location is unavailable."}
               </p>
             </div>
             <div className="card subtle">
@@ -61,6 +70,15 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
               <strong>{organizations.length} organizations</strong>
               <p className="helper">
                 {activeOrganization ? `Active workspace: ${activeOrganization.name}` : "No active workspace selected yet."}
+              </p>
+            </div>
+            <div className="card subtle">
+              <span className="helper">Saved fallback location</span>
+              <strong>{savedAddress || "No saved address yet"}</strong>
+              <p className="helper">
+                {profile?.latitude && profile?.longitude
+                  ? "Ready to use when device geolocation is unavailable."
+                  : "Add an address to enable marketplace fallback when location permission is denied."}
               </p>
             </div>
           </div>
@@ -87,6 +105,27 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
                 <option value="studio_operator">Studio operator</option>
               </select>
             </div>
+            <AddressFields
+              section="profile"
+              addressLine1Name="addressLine1"
+              addressLine1Id="profile-address-line1"
+              addressLine1Label="Saved fallback address"
+              addressLine1Value={profile?.address_line1}
+              addressLine2Name="addressLine2"
+              addressLine2Id="profile-address-line2"
+              addressLine2Value={profile?.address_line2}
+              cityName="city"
+              cityId="profile-city"
+              cityValue={profile?.city}
+              provinceName="province"
+              provinceId="profile-province"
+              provinceValue={profile?.province}
+              postalCodeName="postalCode"
+              postalCodeId="profile-postal-code"
+              postalCodeValue={profile?.postal_code}
+              countryCodeValue={profile?.country_code || "CA"}
+              helperText="Used only when device location is unavailable or permission is denied."
+            />
             <button type="submit" className="button">
               Save profile
             </button>

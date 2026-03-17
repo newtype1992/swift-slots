@@ -10,6 +10,7 @@
     "test:backend": "tsx --test tests/backend/integration.test.ts"
   },
   "dependencies": {
+    "@mapbox/search-js-react": "^1.5.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.56.1",
     "next": "^15.3.0",

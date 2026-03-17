@@ -7,6 +7,8 @@ type MarketplaceStudioRow = {
   location_text: string;
   city: string;
   class_categories: string[] | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 type MarketplaceSlotRow = {
@@ -106,7 +108,7 @@ export async function getMarketplaceSlots(input: {
   const { data } = await supabase
     .from("slots")
     .select(
-      "id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studio_id, studios(id, name, slug, location_text, city, class_categories)"
+      "id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studio_id, studios(id, name, slug, location_text, city, class_categories, latitude, longitude)"
     )
     .order("start_time", { ascending: true })
     .limit(limit)
@@ -124,7 +126,7 @@ export async function getMarketplaceSlot(input: {
   const { data } = await supabase
     .from("slots")
     .select(
-      "id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studio_id, studios(id, name, slug, location_text, city, class_categories)"
+      "id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studio_id, studios(id, name, slug, location_text, city, class_categories, latitude, longitude)"
     )
     .eq("id", slotId)
     .maybeSingle<MarketplaceSlotRow>();
@@ -141,7 +143,7 @@ export async function getBookingConfirmation(input: {
   const { data } = await supabase
     .from("bookings")
     .select(
-      "id, payment_status, created_at, slot_id, slots(id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studios(id, name, slug, location_text, city, class_categories))"
+      "id, payment_status, created_at, slot_id, slots(id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studios(id, name, slug, location_text, city, class_categories, latitude, longitude))"
     )
     .eq("id", bookingId)
     .maybeSingle<BookingDetailRow>();
