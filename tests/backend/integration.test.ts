@@ -10,6 +10,10 @@ import {
   getOrganizationSubscription,
 } from "../../lib/billing/server";
 import { syncCheckoutCompletion, syncStripeSubscription } from "../../lib/billing/webhooks";
+import {
+  syncBookingCompletedNotifications,
+  syncBookingExpiredNotifications,
+} from "../../lib/marketplace/notifications";
 
 type EnvMap = Record<string, string>;
 
@@ -128,6 +132,18 @@ function makeCheckoutSession(organizationId: string, customerId: string, planKey
       plan_key: planKey,
     },
     customer: customerId,
+  } as Stripe.Checkout.Session;
+}
+
+function makeMarketplaceCheckoutSession(bookingId: string): Stripe.Checkout.Session {
+  return {
+    id: `cs_marketplace_${bookingId.replace(/-/g, "")}`,
+    object: "checkout.session",
+    mode: "payment",
+    metadata: {
+      booking_id: bookingId,
+    },
+    amount_total: 2250,
   } as Stripe.Checkout.Session;
 }
 
@@ -579,4 +595,176 @@ test("webhook sync updates subscriptions and records billing activity", async ()
   assert.equal(activity.error, null);
   assert.ok(activity.data?.some((row) => row.action === "billing.checkout_completed"));
   assert.ok(activity.data?.some((row) => row.action === "billing.subscription_updated"));
+});
+
+test("marketplace notifications send once for paid and expired bookings", async () => {
+  const context = loadSupabaseContext();
+  const admin = createAdminClient(context);
+  const stamp = Date.now() + 4;
+  const operatorClient = await signUpAndSignIn(context, `notify-operator-${stamp}@example.com`);
+  const consumerClient = await signUpAndSignIn(context, `notify-consumer-${stamp}@example.com`);
+
+  const {
+    data: { user: operatorUser },
+  } = await operatorClient.auth.getUser();
+  const {
+    data: { user: consumerUser },
+  } = await consumerClient.auth.getUser();
+
+  await admin.from("profiles").update({ role: "studio_operator" }).eq("id", operatorUser!.id);
+
+  const studioInsert = await operatorClient
+    .from("studios")
+    .insert({
+      operator_user_id: operatorUser!.id,
+      name: `Notification Studio ${stamp}`,
+      slug: `notification-studio-${stamp}`,
+      location_text: "789 Booking Avenue, Montreal",
+      class_categories: ["Spin"],
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(studioInsert.error, null);
+
+  const paidSlotInsert = await operatorClient
+    .from("slots")
+    .insert({
+      studio_id: studioInsert.data!.id,
+      class_type: "Sunrise Spin",
+      start_time: new Date(Date.now() + 75 * 60 * 1000).toISOString(),
+      class_length_minutes: 50,
+      original_price: 32,
+      discount_percent: 20,
+      available_spots: 2,
+      status: "open",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(paidSlotInsert.error, null);
+
+  const paidBooking = await consumerClient
+    .rpc("create_slot_booking", {
+      p_slot_id: paidSlotInsert.data!.id,
+    })
+    .single<{ id: string }>();
+  assert.equal(paidBooking.error, null);
+
+  await admin.rpc("mark_slot_booking_paid", {
+    p_booking_id: paidBooking.data!.id,
+    p_checkout_session_id: `cs_notifications_paid_${stamp}`,
+    p_payment_intent_id: `pi_notifications_paid_${stamp}`,
+    p_amount_paid: 25.6,
+  });
+
+  let consumerPaidCount = 0;
+  let studioAlertCount = 0;
+  await syncBookingCompletedNotifications(admin, makeMarketplaceCheckoutSession(paidBooking.data!.id), {
+    async sendConsumerBookingConfirmationEmail() {
+      consumerPaidCount += 1;
+      return { status: "sent" } as const;
+    },
+    async sendStudioBookingAlertEmail() {
+      studioAlertCount += 1;
+      return { status: "sent" } as const;
+    },
+    async sendConsumerCheckoutExpiredEmail() {
+      return { status: "sent" } as const;
+    },
+  });
+
+  assert.equal(consumerPaidCount, 1);
+  assert.equal(studioAlertCount, 1);
+
+  await syncBookingCompletedNotifications(admin, makeMarketplaceCheckoutSession(paidBooking.data!.id), {
+    async sendConsumerBookingConfirmationEmail() {
+      consumerPaidCount += 1;
+      return { status: "sent" } as const;
+    },
+    async sendStudioBookingAlertEmail() {
+      studioAlertCount += 1;
+      return { status: "sent" } as const;
+    },
+    async sendConsumerCheckoutExpiredEmail() {
+      return { status: "sent" } as const;
+    },
+  });
+
+  assert.equal(consumerPaidCount, 1);
+  assert.equal(studioAlertCount, 1);
+
+  const paidBookingAfterNotify = await admin
+    .from("bookings")
+    .select("consumer_confirmation_sent_at, studio_notification_sent_at")
+    .eq("id", paidBooking.data!.id)
+    .maybeSingle<{ consumer_confirmation_sent_at: string | null; studio_notification_sent_at: string | null }>();
+  assert.equal(paidBookingAfterNotify.error, null);
+  assert.ok(paidBookingAfterNotify.data?.consumer_confirmation_sent_at);
+  assert.ok(paidBookingAfterNotify.data?.studio_notification_sent_at);
+
+  const expiredSlotInsert = await operatorClient
+    .from("slots")
+    .insert({
+      studio_id: studioInsert.data!.id,
+      class_type: "Lunch Ride",
+      start_time: new Date(Date.now() + 95 * 60 * 1000).toISOString(),
+      class_length_minutes: 45,
+      original_price: 29,
+      discount_percent: 15,
+      available_spots: 1,
+      status: "open",
+    })
+    .select("id")
+    .single<{ id: string }>();
+  assert.equal(expiredSlotInsert.error, null);
+
+  const expiredBooking = await consumerClient
+    .rpc("create_slot_booking", {
+      p_slot_id: expiredSlotInsert.data!.id,
+    })
+    .single<{ id: string }>();
+  assert.equal(expiredBooking.error, null);
+
+  await admin.rpc("cancel_slot_booking", {
+    p_booking_id: expiredBooking.data!.id,
+    p_checkout_session_id: `cs_notifications_expired_${stamp}`,
+  });
+
+  let expiredNoticeCount = 0;
+  await syncBookingExpiredNotifications(admin, makeMarketplaceCheckoutSession(expiredBooking.data!.id), {
+    async sendConsumerBookingConfirmationEmail() {
+      return { status: "sent" } as const;
+    },
+    async sendStudioBookingAlertEmail() {
+      return { status: "sent" } as const;
+    },
+    async sendConsumerCheckoutExpiredEmail() {
+      expiredNoticeCount += 1;
+      return { status: "sent" } as const;
+    },
+  });
+
+  assert.equal(expiredNoticeCount, 1);
+
+  await syncBookingExpiredNotifications(admin, makeMarketplaceCheckoutSession(expiredBooking.data!.id), {
+    async sendConsumerBookingConfirmationEmail() {
+      return { status: "sent" } as const;
+    },
+    async sendStudioBookingAlertEmail() {
+      return { status: "sent" } as const;
+    },
+    async sendConsumerCheckoutExpiredEmail() {
+      expiredNoticeCount += 1;
+      return { status: "sent" } as const;
+    },
+  });
+
+  assert.equal(expiredNoticeCount, 1);
+
+  const expiredBookingAfterNotify = await admin
+    .from("bookings")
+    .select("checkout_expired_notified_at")
+    .eq("id", expiredBooking.data!.id)
+    .maybeSingle<{ checkout_expired_notified_at: string | null }>();
+  assert.equal(expiredBookingAfterNotify.error, null);
+  assert.ok(expiredBookingAfterNotify.data?.checkout_expired_notified_at);
 });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { syncCheckoutCompletion, syncStripeSubscription } from "@/lib/billing/webhooks";
+import { syncBookingCompletedNotifications, syncBookingExpiredNotifications } from "@/lib/marketplace/notifications";
 import { syncBookingCheckoutCompleted, syncBookingCheckoutExpired } from "@/lib/marketplace/payments";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createStripeServerClient } from "@/lib/stripe/server";
@@ -34,9 +35,19 @@ export async function POST(request: Request) {
       case "checkout.session.completed":
         await syncCheckoutCompletion(admin, event.data.object as Stripe.Checkout.Session);
         await syncBookingCheckoutCompleted(admin, event.data.object as Stripe.Checkout.Session);
+        try {
+          await syncBookingCompletedNotifications(admin, event.data.object as Stripe.Checkout.Session);
+        } catch (notificationError) {
+          console.error("[stripe webhook] booking completion notifications failed", notificationError);
+        }
         break;
       case "checkout.session.expired":
         await syncBookingCheckoutExpired(admin, event.data.object as Stripe.Checkout.Session);
+        try {
+          await syncBookingExpiredNotifications(admin, event.data.object as Stripe.Checkout.Session);
+        } catch (notificationError) {
+          console.error("[stripe webhook] booking expiry notifications failed", notificationError);
+        }
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":
