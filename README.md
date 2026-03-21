@@ -59,6 +59,17 @@ Swift Slots retains the current Micro SaaS Starter stack:
 
 The product is web-first. A native mobile application may be added later for consumers booking slots, but the initial MVP should be implemented as a web application.
 
+## UX Direction
+
+The project now has a dedicated UI and flow reference in `UX-ARCHITECTURE.md`.
+
+That document is the current source of truth for:
+
+- component-system direction
+- role-based information architecture
+- consumer and studio operator flows
+- low-fidelity wireframe structure for future UI work
+
 ## Inherited Starter Capabilities
 
 The starter currently includes generic SaaS platform capabilities such as:

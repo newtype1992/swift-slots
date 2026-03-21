@@ -145,6 +145,7 @@ The same evaluation rule applies to integrations and support tooling.
 - Keep schema changes migrations-first.
 - Keep sensitive writes server-owned where appropriate.
 - Prefer simple implementations over premature abstractions.
+- Follow the UX and component direction documented in `UX-ARCHITECTURE.md` for future UI work.
 
 ## Non-Goals
 

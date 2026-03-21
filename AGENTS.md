@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This repository is intended to be developed primarily with ChatGPT Codex and the Codex CLI, with manual steps called out explicitly when automation is not enough. Before making changes, read `CONTEXT.md`.
+This repository is intended to be developed primarily with ChatGPT Codex and the Codex CLI, with manual steps called out explicitly when automation is not enough. Before making changes, read `CONTEXT.md` and `UX-ARCHITECTURE.md`.
 
 ## Development Rules
 
@@ -14,6 +14,7 @@ This repository is intended to be developed primarily with ChatGPT Codex and the
 8. Explain architecture changes before or with implementation. If a change replaces a starter abstraction or adds a new domain abstraction, explain why.
 9. Prefer simple solutions. Avoid unnecessary abstraction or speculative infrastructure.
 10. Validate backend changes with Supabase before continuing.
+11. For frontend work, follow the product flow and component direction in `UX-ARCHITECTURE.md` unless a deliberate product decision changes it.
 
 ## Workflow
 
