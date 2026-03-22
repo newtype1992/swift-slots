@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { DealCard } from "@/components/marketplace/deal-card";
+import { FilterChip } from "@/components/ui/filter-chip";
 import type { MarketplaceSlot } from "@/lib/marketplace/server";
 import { discountedPrice } from "@/lib/marketplace/server";
 import { type Coordinates, rankMarketplaceSlots } from "@/lib/location";
@@ -85,6 +87,28 @@ function filterMarketplaceSlots(
 
     return true;
   });
+}
+
+function toneForClassType(value: string): "navy" | "coral" | "teal" | "slate" | "gold" {
+  const normalized = value.toLowerCase();
+
+  if (normalized.includes("yoga") || normalized.includes("flow")) {
+    return "navy";
+  }
+
+  if (normalized.includes("pilates") || normalized.includes("stretch") || normalized.includes("recovery")) {
+    return "gold";
+  }
+
+  if (normalized.includes("run") || normalized.includes("cycle") || normalized.includes("spin")) {
+    return "teal";
+  }
+
+  if (normalized.includes("box") || normalized.includes("hiit") || normalized.includes("strength")) {
+    return "coral";
+  }
+
+  return "slate";
 }
 
 export function MarketplaceResults({
@@ -192,7 +216,7 @@ export function MarketplaceResults({
 
   return (
     <div className="grid">
-      <section className="panel">
+      <section className="panel dealSection">
         <div className="sectionHeader">
           <div className="stack compactStack">
             <p className="eyebrow">Discovery mode</p>
@@ -212,17 +236,15 @@ export function MarketplaceResults({
         </div>
       </section>
 
-      <section className="panel">
+      <section className="panel dealSection">
         <div className="sectionHeader">
           <div className="stack compactStack">
             <p className="eyebrow">Filters</p>
-            <h2>Refine what shows up</h2>
-            <p className="muted">
-              Narrow by class type, how soon the class starts, minimum discount, and the maximum discounted price you are willing to pay.
-            </p>
+            <h2>Deals happening now</h2>
+            <p className="muted">Refine by class type, timing, price, and discount while keeping the marketplace easy to scan.</p>
           </div>
           <div className="sectionHeaderActions">
-            <span className="tag">
+            <span className="dealBadge">
               {filteredRankedSlots.length} of {slots.length} visible
             </span>
             {activeFilterCount > 0 ? (
@@ -232,22 +254,20 @@ export function MarketplaceResults({
             ) : null}
           </div>
         </div>
-        <div className="grid two topSpacing">
-          <div className="field">
-            <label htmlFor="marketplace-class-type">Class type</label>
-            <select
-              id="marketplace-class-type"
-              value={classTypeFilter}
-              onChange={(event) => setClassTypeFilter(event.target.value)}
-            >
-              <option value="all">All class types</option>
-              {classTypeOptions.map((classType) => (
-                <option key={classType} value={classType}>
-                  {classType}
-                </option>
-              ))}
-            </select>
-          </div>
+
+        <div className="filterChipRow topSpacing">
+          <FilterChip label="All classes" active={classTypeFilter === "all"} onClick={() => setClassTypeFilter("all")} />
+          {classTypeOptions.map((classType) => (
+            <FilterChip
+              key={classType}
+              label={classType}
+              active={classTypeFilter === classType}
+              onClick={() => setClassTypeFilter(classType)}
+            />
+          ))}
+        </div>
+
+        <div className="marketplaceControlGrid topSpacing">
           <div className="field">
             <label htmlFor="marketplace-start-window">Starts within</label>
             <select
@@ -289,54 +309,46 @@ export function MarketplaceResults({
         </div>
       </section>
 
-      <section className="grid two">
-        {filteredRankedSlots.length > 0 ? (
-          filteredRankedSlots.map(({ slot, distanceKm }) => (
-            <article key={slot.id} className="panel">
-              <div className="splitRow">
-                <div className="stack compactStack">
-                  <p className="eyebrow">Open slot</p>
-                  <h2>{slot.class_type}</h2>
-                  <p className="muted">
-                    {slot.studio?.name ?? "Unknown studio"} - {slot.studio?.location_text ?? "Montreal"}
-                  </p>
-                </div>
-                <div className="meta">
-                  <span className="tag">{slot.available_spots} spots left</span>
-                  {distanceKm !== null ? <span className="tag">{formatDistance(distanceKm)}</span> : null}
-                </div>
-              </div>
-              <div className="meta topSpacing">
-                <span className="tag">{formatDateTime(slot.start_time)}</span>
-                <span className="tag">{slot.class_length_minutes} min</span>
-                <span className="tag">{slot.discount_percent}% off</span>
-                <span className="tag">{formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}</span>
-              </div>
-              <div className="actions topSpacing">
-                <Link href={`/marketplace/${slot.id}`} className="button">
-                  View slot
-                </Link>
-              </div>
-            </article>
-          ))
-        ) : (
-          <div className="panel">
-            <h2>{slots.length > 0 ? "No slots match these filters" : "No bookable slots right now"}</h2>
-            <p className="muted">
-              {slots.length > 0
-                ? "Try widening the filters or clearing them to see more bookable classes."
-                : "The marketplace is empty at the moment. Open slots will appear here once studios publish them far enough ahead of class start."}
-            </p>
-            {slots.length > 0 && activeFilterCount > 0 ? (
-              <div className="actions topSpacing">
-                <button type="button" className="buttonSecondary" onClick={resetFilters}>
-                  Clear filters
-                </button>
-              </div>
-            ) : null}
-          </div>
-        )}
-      </section>
+      {filteredRankedSlots.length > 0 ? (
+        <section className="dealGrid">
+          {filteredRankedSlots.map(({ slot, distanceKm }) => (
+            <DealCard
+              key={slot.id}
+              eyebrow={`${slot.discount_percent}% off`}
+              title={slot.class_type}
+              subtitle={slot.studio?.name ?? "Unknown studio"}
+              price={formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}
+              originalPrice={formatMoney(slot.original_price)}
+              badges={[
+                formatDateTime(slot.start_time),
+                `${slot.class_length_minutes} min`,
+                `${slot.available_spots} spots`,
+                distanceKm !== null ? formatDistance(distanceKm) : "Montreal",
+              ]}
+              href={`/marketplace/${slot.id}`}
+              ctaLabel="Book now"
+              tone={toneForClassType(slot.class_type)}
+              visualLabel={slot.studio?.location_text ?? "Montreal"}
+            />
+          ))}
+        </section>
+      ) : (
+        <section className="panel">
+          <h2>{slots.length > 0 ? "No slots match these filters" : "No bookable slots right now"}</h2>
+          <p className="muted">
+            {slots.length > 0
+              ? "Try widening the filters or clearing them to see more bookable classes."
+              : "The marketplace is empty at the moment. Open slots will appear here once studios publish them far enough ahead of class start."}
+          </p>
+          {slots.length > 0 && activeFilterCount > 0 ? (
+            <div className="actions topSpacing">
+              <button type="button" className="buttonSecondary" onClick={resetFilters}>
+                Clear filters
+              </button>
+            </div>
+          ) : null}
+        </section>
+      )}
     </div>
   );
 }

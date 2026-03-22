@@ -1,5 +1,83 @@
 import Link from "next/link";
+import { DealCard } from "@/components/marketplace/deal-card";
+import { FilterChip } from "@/components/ui/filter-chip";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const featuredSlots = [
+  {
+    eyebrow: "Live slot",
+    title: "Hot Flow Recovery",
+    subtitle: "Mile End Yoga",
+    price: "$14",
+    originalPrice: "$28",
+    badges: ["Today 6:30 PM", "45 min", "50% off"],
+    href: "/auth",
+    ctaLabel: "Book now",
+    tone: "navy" as const,
+    visualLabel: "Heat + Restore",
+  },
+  {
+    eyebrow: "Fresh drop",
+    title: "HIIT Express",
+    subtitle: "Plateau Strength",
+    price: "$12",
+    originalPrice: "$24",
+    badges: ["In 90 min", "35 min", "50% off"],
+    href: "/auth",
+    ctaLabel: "Book now",
+    tone: "coral" as const,
+    visualLabel: "Fast Burn",
+  },
+  {
+    eyebrow: "Open spot",
+    title: "Deep Stretch Reset",
+    subtitle: "Atwater Mobility",
+    price: "$18",
+    originalPrice: "$32",
+    badges: ["Tonight 7:15 PM", "60 min", "44% off"],
+    href: "/auth",
+    ctaLabel: "Book now",
+    tone: "gold" as const,
+    visualLabel: "Calm + Lengthen",
+  },
+  {
+    eyebrow: "Last minute",
+    title: "Pilates Core Lab",
+    subtitle: "Rosemont Reform",
+    price: "$16",
+    originalPrice: "$30",
+    badges: ["Tomorrow 8:00 AM", "50 min", "47% off"],
+    href: "/auth",
+    ctaLabel: "Book now",
+    tone: "teal" as const,
+    visualLabel: "Core Focus",
+  },
+  {
+    eyebrow: "Few left",
+    title: "Run Club Tempo",
+    subtitle: "Canal Track House",
+    price: "$8",
+    originalPrice: "$16",
+    badges: ["Today 5:45 PM", "40 min", "50% off"],
+    href: "/auth",
+    ctaLabel: "Book now",
+    tone: "slate" as const,
+    visualLabel: "Pace Session",
+  },
+  {
+    eyebrow: "Just added",
+    title: "Boxing Conditioning",
+    subtitle: "St Henri Combat",
+    price: "$15",
+    originalPrice: "$29",
+    badges: ["Tonight 8:15 PM", "50 min", "48% off"],
+    href: "/auth",
+    ctaLabel: "Book now",
+    tone: "coral" as const,
+    visualLabel: "Power Round",
+  },
+];
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
@@ -8,112 +86,53 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   return (
-    <main className="grid">
-      <section className="hero heroGrid">
-        <div className="stack">
-          <p className="eyebrow">Last-minute fitness marketplace</p>
-          <h1 className="headline">Resell canceled class spots before they go dark.</h1>
-          <p className="subhead">
-            Swift Slots gives Montreal studios a clean operator flow for posting discounted openings and gives consumers a fast path to claim them.
+    <main className="marketingPage">
+      <section className="landingHero">
+        <div className="landingHeroCopy">
+          <span className="landingBadge">Live classes nearby</span>
+          <h1>
+            Grab cancelled slots.
+            <span> Train today. Save big.</span>
+          </h1>
+          <p>
+            Discover discounted same-day fitness classes from Montreal studios. Studios recover revenue and consumers
+            book fast before openings disappear.
           </p>
-          <div className="actions">
-            <Link href={user ? "/dashboard" : "/auth"} className="button">
-              {user ? "Open workspace" : "Create an account"}
+          <div className="landingHeroActions">
+            <Link href={user ? "/marketplace" : "/auth"} className="button">
+              Browse classes now
             </Link>
-            <a href="http://127.0.0.1:54323" className="buttonSecondary" target="_blank" rel="noreferrer">
-              Open Supabase Studio
-            </a>
+            <Link href={user ? "/settings/studio" : "/auth"} className="buttonSecondary">
+              For studios
+            </Link>
+          </div>
+          <div className="landingHeroMeta">
+            <span>Live inventory updates</span>
+            <span>Montreal only</span>
+            <span>Secure checkout</span>
           </div>
         </div>
-
-        <aside className="heroAside">
-          <div>
-            <p className="eyebrow">Live product</p>
-            <h2>Current scope</h2>
-          </div>
-          <div className="list compact">
-            <div className="splitRow">
-              <span className="helper">Studio setup</span>
-              <strong>Ready</strong>
-            </div>
-            <div className="splitRow">
-              <span className="helper">Marketplace booking</span>
-              <strong>Ready</strong>
-            </div>
-            <div className="splitRow">
-              <span className="helper">Stripe checkout</span>
-              <strong>Ready</strong>
-            </div>
-          </div>
-        </aside>
       </section>
 
-      <section className="metricGrid">
-        <article className="metricCard">
-          <p className="eyebrow">Operators</p>
-          <div className="metricValue">Studios</div>
-          <p className="helper">Create a studio profile, define categories, and post discounted slots.</p>
-        </article>
-        <article className="metricCard">
-          <p className="eyebrow">Consumers</p>
-          <div className="metricValue">Book</div>
-          <p className="helper">Browse current inventory, review pricing, and pay through Stripe Checkout.</p>
-        </article>
-        <article className="metricCard">
-          <p className="eyebrow">Backend</p>
-          <div className="metricValue">RLS</div>
-          <p className="helper">Supabase policies enforce role separation, visibility, and booking boundaries.</p>
-        </article>
-      </section>
-
-      <section className="grid two">
-        <article className="panel">
-          <div className="sectionHeader">
-            <div className="stack compactStack">
-              <p className="eyebrow">Live surface</p>
-              <h2>What works now</h2>
-            </div>
-          </div>
-          <div className="list">
-            <div className="card subtle">
-              <h3>Email auth</h3>
-              <p className="muted">
-                Sign up and sign in against your local Supabase instance with SSR-safe session handling.
-              </p>
-            </div>
-            <div className="card subtle">
-              <h3>Role-aware accounts</h3>
-              <p className="muted">
-                Profiles now distinguish studio operators from consumers so the product can branch into separate flows.
-              </p>
-            </div>
-            <div className="card subtle">
-              <h3>Studio and marketplace flow</h3>
-              <p className="muted">
-                Operators can post slots and consumers can book them through the protected workspace and Stripe checkout.
-              </p>
-            </div>
-          </div>
-        </article>
-
-        <article className="panel">
-          <div className="sectionHeader">
-            <div className="stack compactStack">
-              <p className="eyebrow">Roadmap</p>
-              <h2>What comes next</h2>
-            </div>
-          </div>
-          <div className="stack">
-            <p className="muted">
-              The next product layer is discovery: location-aware ranking, fallback address logic, and tighter marketplace filtering around time, distance, and class type.
-            </p>
-            <div className="meta">
-              <span className="tag">Device geolocation</span>
-              <span className="tag">Profile fallback</span>
-              <span className="tag">Nearby ranking</span>
-            </div>
-          </div>
-        </article>
+      <section className="dealSection">
+        <SectionHeading
+          eyebrow="Marketplace"
+          title="Classes happening now"
+          description="Book the last-minute openings that are already discounted and still live in the app."
+        />
+        <div className="filterChipRow">
+          <FilterChip label="All classes" active />
+          <FilterChip label="Yoga" />
+          <FilterChip label="HIIT" />
+          <FilterChip label="Recovery" />
+          <FilterChip label="Pilates" />
+          <FilterChip label="Run club" />
+        </div>
+        <div className="dealGrid">
+          {featuredSlots.map((slot) => (
+            <DealCard key={`${slot.title}-${slot.subtitle}`} {...slot} />
+          ))}
+        </div>
       </section>
     </main>
   );

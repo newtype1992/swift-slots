@@ -1,0 +1,320 @@
+.page {
+  display: grid;
+  gap: 28px;
+  padding: 8px 0 40px;
+}
+
+.hero {
+  display: grid;
+  gap: 16px;
+  padding: 28px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #253552 0%, #2b3a58 100%);
+  color: #fff;
+  box-shadow: 0 28px 70px rgba(37, 53, 82, 0.16);
+}
+
+.hero h1,
+.hero p {
+  margin: 0;
+}
+
+.heroEyebrow {
+  color: rgba(255, 255, 255, 0.62);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 107, 44, 0.14);
+  color: #ffd4c2;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.board {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(37, 53, 82, 0.06);
+}
+
+.boardHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.boardHeader h2,
+.boardHeader p {
+  margin: 0;
+}
+
+.boardHeader p {
+  color: #7b8296;
+  line-height: 1.5;
+}
+
+.flowGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.flowCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+  border-radius: 14px;
+  background: #fafbff;
+}
+
+.flowCard h3,
+.flowCard p {
+  margin: 0;
+}
+
+.flowCard p {
+  color: #7b8296;
+  font-size: 0.9rem;
+}
+
+.flowTagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #fff0e8;
+  color: #ff6b2c;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.navGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.navCard {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+  border-radius: 16px;
+  background: #fafbff;
+}
+
+.navCard h3,
+.navCard p {
+  margin: 0;
+}
+
+.navList {
+  display: grid;
+  gap: 10px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+}
+
+.navLabel {
+  font-weight: 700;
+  color: #2a3147;
+}
+
+.navNote {
+  color: #8d93a6;
+  font-size: 0.86rem;
+}
+
+.frameGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.frame {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #f7f8fc;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+}
+
+.frameHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.frameHeader h3,
+.frameHeader p {
+  margin: 0;
+}
+
+.frameHeader p {
+  color: #8d93a6;
+  font-size: 0.88rem;
+}
+
+.frameMeta {
+  display: grid;
+  gap: 8px;
+}
+
+.frameMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.metaChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+  color: #5f6578;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.wireframe {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px dashed rgba(42, 49, 71, 0.18);
+}
+
+.wireTop,
+.wireRow,
+.wireSidebarRow,
+.wireSplit {
+  display: grid;
+  gap: 10px;
+}
+
+.wireTop {
+  grid-template-columns: 1fr 150px;
+}
+
+.wireSplit {
+  grid-template-columns: 1.3fr 0.8fr;
+}
+
+.wireSidebarRow {
+  grid-template-columns: 180px 1fr;
+}
+
+.wireBox,
+.wireBoxTall,
+.wireNavBox,
+.wireCta {
+  border-radius: 12px;
+  border: 1px solid rgba(42, 49, 71, 0.12);
+  background: #f5f6fb;
+  color: #5f6578;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 12px;
+}
+
+.wireBoxTall {
+  min-height: 126px;
+}
+
+.wireNavBox {
+  min-height: 260px;
+}
+
+.wireCta {
+  background: #fff0e8;
+  border-color: rgba(255, 107, 44, 0.2);
+  color: #ff6b2c;
+  text-align: center;
+}
+
+.wireChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wireChip {
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef1f8;
+  color: #67708a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.annotation {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(42, 49, 71, 0.08);
+}
+
+.annotation strong,
+.annotation span {
+  font-size: 0.84rem;
+}
+
+.annotation span {
+  color: #7b8296;
+}
+
+@media (max-width: 1100px) {
+  .flowGrid,
+  .navGrid,
+  .frameGrid,
+  .wireSplit,
+  .wireTop,
+  .wireSidebarRow {
+    grid-template-columns: 1fr;
+  }
+}

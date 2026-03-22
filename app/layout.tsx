@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
+import { IBM_Plex_Mono, Instrument_Sans, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -25,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${instrumentSans.variable} ${plexMono.variable}`}>
+    <html lang="en" className={cn("font-sans", geist.variable)}>
+      <body className={`${geist.variable} ${plexMono.variable}`}>
         <div className="shell appShell">
           <header className="siteHeader">
             <div className="brandLockup">
@@ -35,6 +33,17 @@ export default function RootLayout({
               </Link>
               <span className="brandBadge">Montreal beta</span>
             </div>
+            <nav className="headerNav">
+              <Link href="/marketplace" className="headerNavLink">
+                Browse classes
+              </Link>
+              <Link href="/" className="headerNavLink">
+                How it works
+              </Link>
+              <Link href="/settings/studio" className="headerNavLink">
+                For studios
+              </Link>
+            </nav>
             <div className="headerActions">
               <Link href="/auth" className="buttonSecondary">
                 Sign in
