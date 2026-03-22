@@ -66,10 +66,12 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
               <p className="helper mono">{user.id}</p>
             </div>
             <div className="card subtle">
-              <span className="helper">Workspace access</span>
+              <span className="helper">Legacy workspace access</span>
               <strong>{organizations.length} organizations</strong>
               <p className="helper">
-                {activeOrganization ? `Active workspace: ${activeOrganization.name}` : "No active workspace selected yet."}
+                {activeOrganization
+                  ? `Active starter workspace: ${activeOrganization.name}. These controls are now hidden from the primary product navigation.`
+                  : "No inherited starter workspace is selected right now."}
               </p>
             </div>
             <div className="card subtle">

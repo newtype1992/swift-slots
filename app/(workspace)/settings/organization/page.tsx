@@ -53,9 +53,9 @@ export default async function OrganizationSettingsPage({ searchParams }: Organiz
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Organization</p>
-        <h2>{activeOrganization.name}</h2>
-        <p className="muted">Workspace details, member management, invites, and retention-aware history live here.</p>
+        <p className="eyebrow">Legacy</p>
+        <h2>{activeOrganization.name} organization settings</h2>
+        <p className="muted">These inherited starter controls remain available for migration purposes, but they are no longer part of the main Swift Slots flow.</p>
         {params.error ? <p className="message">Error: {params.error}</p> : null}
         {params.message ? <p className="message">{params.message}</p> : null}
         <div className="meta">

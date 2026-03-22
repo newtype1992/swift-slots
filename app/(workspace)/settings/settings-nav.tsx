@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
-  { href: "/settings/profile", label: "Profile", detail: "Account identity and role" },
-  { href: "/settings/studio", label: "Studio", detail: "Operator setup and slot inventory" },
-  { href: "/settings/organization", label: "Starter Org", detail: "Legacy org administration" },
-  { href: "/settings/billing", label: "Starter Billing", detail: "Inherited plan and usage controls" },
-];
+type SettingsNavProps = {
+  role: "studio_operator" | "consumer";
+};
 
-export function SettingsNav() {
+export function SettingsNav({ role }: SettingsNavProps) {
   const pathname = usePathname();
+  const links =
+    role === "studio_operator"
+      ? [
+          { href: "/settings/profile", label: "Profile", detail: "Account identity and operator mode" },
+          { href: "/settings/studio", label: "Studio", detail: "Studio identity and slot inventory" },
+        ]
+      : [{ href: "/settings/profile", label: "Profile", detail: "Account identity and saved location" }];
 
   return (
     <div className="settingsTabs">

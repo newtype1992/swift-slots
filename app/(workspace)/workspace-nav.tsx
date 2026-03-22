@@ -3,47 +3,54 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
-  {
-    href: "/dashboard",
-    label: "Overview",
-    detail: "Workspace summary and recent activity",
-    match: (pathname: string) => pathname === "/dashboard",
-  },
-  {
-    href: "/marketplace",
-    label: "Marketplace",
-    detail: "Browse and book live openings",
-    match: (pathname: string) => pathname.startsWith("/marketplace"),
-  },
-  {
-    href: "/settings/profile",
-    label: "Profile",
-    detail: "Identity, role, and account settings",
-    match: (pathname: string) => pathname.startsWith("/settings/profile"),
-  },
-  {
-    href: "/settings/studio",
-    label: "Studio",
-    detail: "Operator setup and slot publishing",
-    match: (pathname: string) => pathname.startsWith("/settings/studio"),
-  },
-  {
-    href: "/settings/organization",
-    label: "Starter Org",
-    detail: "Legacy workspace controls",
-    match: (pathname: string) => pathname.startsWith("/settings/organization"),
-  },
-  {
-    href: "/settings/billing",
-    label: "Starter Billing",
-    detail: "Inherited subscription tooling",
-    match: (pathname: string) => pathname.startsWith("/settings/billing"),
-  },
-];
+type WorkspaceNavProps = {
+  role: "studio_operator" | "consumer";
+};
 
-export function WorkspaceNav() {
+export function WorkspaceNav({ role }: WorkspaceNavProps) {
   const pathname = usePathname();
+  const links =
+    role === "studio_operator"
+      ? [
+          {
+            href: "/dashboard",
+            label: "Dashboard",
+            detail: "Operator overview and next actions",
+            match: (currentPath: string) => currentPath === "/dashboard",
+          },
+          {
+            href: "/settings/studio",
+            label: "Studio",
+            detail: "Studio identity and slot publishing",
+            match: (currentPath: string) => currentPath.startsWith("/settings/studio"),
+          },
+          {
+            href: "/settings/profile",
+            label: "Profile",
+            detail: "Identity and account mode",
+            match: (currentPath: string) => currentPath.startsWith("/settings/profile"),
+          },
+        ]
+      : [
+          {
+            href: "/dashboard",
+            label: "Dashboard",
+            detail: "Consumer overview and next actions",
+            match: (currentPath: string) => currentPath === "/dashboard",
+          },
+          {
+            href: "/marketplace",
+            label: "Marketplace",
+            detail: "Browse and book live openings",
+            match: (currentPath: string) => currentPath.startsWith("/marketplace"),
+          },
+          {
+            href: "/settings/profile",
+            label: "Profile",
+            detail: "Identity and saved location",
+            match: (currentPath: string) => currentPath.startsWith("/settings/profile"),
+          },
+        ];
 
   return (
     <nav className="workspaceNav">

@@ -39,9 +39,9 @@ export default async function BillingSettingsPage({ searchParams }: BillingSetti
   return (
     <div className="grid">
       <section className="panel">
-        <p className="eyebrow">Billing</p>
+        <p className="eyebrow">Legacy</p>
         <h2>{activeOrganization.name} billing settings</h2>
-        <p className="muted">Plan review, seat limits, checkout, and billing portal access live on this screen.</p>
+        <p className="muted">This inherited starter billing surface is still reachable, but it has been removed from the main Swift Slots navigation.</p>
         {params.error ? <p className="message">Error: {params.error}</p> : null}
         {params.message ? <p className="message">{params.message}</p> : null}
       </section>

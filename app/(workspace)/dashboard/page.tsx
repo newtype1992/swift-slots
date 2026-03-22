@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { getMarketplaceSlots } from "@/lib/marketplace/server";
 import { getOperatorStudioSnapshot } from "@/lib/studios/server";
-import {
-  activityLabel,
-  activitySummary,
-  getActiveWorkspaceDetails,
-  requireWorkspaceShellContext,
-} from "@/lib/workspace/server";
+import { requireWorkspaceShellContext } from "@/lib/workspace/server";
 
 type DashboardOverviewPageProps = {
   searchParams?: Promise<{
@@ -14,14 +9,6 @@ type DashboardOverviewPageProps = {
     message?: string;
   }>;
 };
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("en-CA", {
@@ -45,12 +32,7 @@ function discountedPrice(originalPrice: number, discountPercent: number) {
 
 export default async function DashboardOverviewPage({ searchParams }: DashboardOverviewPageProps) {
   const params = (await searchParams) ?? {};
-  const { supabase, user, profile, organizations, activeOrganization, activeRole } = await requireWorkspaceShellContext();
-  const { members, pendingInvites, billingSummary, visibleActivityLogs } = await getActiveWorkspaceDetails({
-    supabase,
-    activeOrganizationId: activeOrganization?.id ?? null,
-    activeRole,
-  });
+  const { supabase, user, profile, organizations } = await requireWorkspaceShellContext();
   const { studio, slots } =
     profile?.role === "studio_operator"
       ? await getOperatorStudioSnapshot({
@@ -66,6 +48,7 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
         })
       : [];
   const upcomingOpenSlots = slots.filter((slot) => slot.status === "open");
+  const hasLocationFallback = Boolean(profile?.latitude && profile?.longitude);
 
   return (
     <div className="grid">
@@ -76,8 +59,8 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             <h1>{profile?.role === "studio_operator" ? "Studio operator overview" : "Consumer overview"}</h1>
             <p className="muted">
               {profile?.role === "studio_operator"
-                ? "Track studio readiness, live slot inventory, and the product state attached to this account."
-                : "Review the account state, current marketplace supply, and the booking path available to this consumer profile."}
+                ? "Track studio readiness, live slot inventory, and the next actions required to keep discounted openings moving."
+                : "Review the account state, current marketplace supply, and the fastest path from discovery into booking."}
             </p>
           </div>
           <div className="sectionHeaderActions">
@@ -97,7 +80,11 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
         <article className="metricCard">
           <p className="eyebrow">Account role</p>
           <div className="metricValue">{profile?.role === "studio_operator" ? "Operator" : "Consumer"}</div>
-          <p className="helper">{organizations.length} inherited workspaces remain attached to this account.</p>
+          <p className="helper">
+            {profile?.role === "studio_operator"
+              ? "This account is configured for studio setup and slot publishing."
+              : "This account is configured for discovery, checkout, and booking confirmation."}
+          </p>
         </article>
         <article className="metricCard">
           <p className="eyebrow">{profile?.role === "studio_operator" ? "Open slots" : "Live supply"}</p>
@@ -107,9 +94,19 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
           </p>
         </article>
         <article className="metricCard">
-          <p className="eyebrow">Starter layer</p>
-          <div className="metricValue">{activeOrganization ? activeRole ?? "member" : "None"}</div>
-          <p className="helper">{activeOrganization ? activeOrganization.name : "No active inherited workspace is selected."}</p>
+          <p className="eyebrow">{profile?.role === "studio_operator" ? "Studio readiness" : "Saved location"}</p>
+          <div className="metricValue">
+            {profile?.role === "studio_operator" ? (studio ? "Ready" : "Needs setup") : hasLocationFallback ? "Ready" : "Add one"}
+          </div>
+          <p className="helper">
+            {profile?.role === "studio_operator"
+              ? studio
+                ? "Studio identity is connected and slot publishing is available."
+                : "Create the studio profile before posting last-minute inventory."
+              : hasLocationFallback
+                ? "Saved coordinates are available when device geolocation is denied."
+                : "Add a fallback address in profile settings for more reliable marketplace ranking."}
+          </p>
         </article>
       </section>
 
@@ -122,7 +119,15 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             <p className="muted">{profile?.email ?? user.email ?? "Unknown email"}</p>
             <div className="meta">
               <span className="tag">{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</span>
-              <span className="tag">{organizations.length} inherited workspaces</span>
+              <span className="tag">
+                {profile?.role === "studio_operator"
+                  ? studio
+                    ? "Studio connected"
+                    : "Studio setup needed"
+                  : hasLocationFallback
+                    ? "Location fallback ready"
+                    : "Location fallback needed"}
+              </span>
             </div>
           </div>
           {profile?.role === "studio_operator" && studio ? (
@@ -140,7 +145,10 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             </div>
           ) : (
             <div className="card subtle topSpacing">
-              <p className="muted">Consumer mode is active. Use the marketplace to browse and book available slots.</p>
+              <p className="muted">
+                Consumer mode is active. Use the marketplace to browse and book available slots.
+                {organizations.length > 0 ? " Legacy starter workspaces remain in the background but are no longer part of the main flow." : ""}
+              </p>
             </div>
           )}
         </article>
@@ -183,83 +191,41 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
       </section>
 
       {profile?.role === "studio_operator" ? (
-        <>
-          <section className="panel">
-            <div className="sectionHeader">
-              <div className="stack compactStack">
-                <p className="eyebrow">Slots</p>
-                <h2>{studio ? `${studio.name} recent slots` : "No studio slots yet"}</h2>
-              </div>
-              <div className="sectionHeaderActions">
-                <Link href="/settings/studio" className="buttonSecondary">
-                  Open studio settings
-                </Link>
-              </div>
-            </div>
-            <div className="list">
-              {slots.length > 0 ? (
-                slots.slice(0, 6).map((slot) => (
-                  <article key={slot.id} className="card subtle">
-                    <div className="splitRow">
-                      <div className="stack compactStack">
-                        <strong>{slot.class_type}</strong>
-                        <span className="helper">{formatDateTime(slot.start_time)}</span>
-                      </div>
-                      <span className={`tag status-${slot.status}`}>{slot.status}</span>
-                    </div>
-                    <div className="meta topSpacing">
-                      <span className="tag">{slot.available_spots} spots</span>
-                      <span className="tag">{slot.discount_percent}% off</span>
-                      <span className="tag">{formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}</span>
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div className="card subtle">
-                  <p className="muted">Post the first open slot from Studio settings to start populating this overview.</p>
-                </div>
-              )}
-            </div>
-          </section>
-        </>
-      ) : null}
-
-      {activeOrganization ? (
         <section className="panel">
           <div className="sectionHeader">
             <div className="stack compactStack">
-              <p className="eyebrow">Starter carryover</p>
-              <h2>{activeOrganization.name} inherited workspace activity</h2>
+              <p className="eyebrow">Slots</p>
+              <h2>{studio ? `${studio.name} recent slots` : "No studio slots yet"}</h2>
             </div>
             <div className="sectionHeaderActions">
-              <Link href="/settings/organization" className="buttonSecondary">
-                Starter org settings
+              <Link href="/settings/studio" className="buttonSecondary">
+                Open studio settings
               </Link>
             </div>
           </div>
           <div className="list">
-            {visibleActivityLogs.length > 0 ? (
-              visibleActivityLogs.slice(0, 4).map((activity) => (
-                <article key={activity.id} className="card subtle">
+            {slots.length > 0 ? (
+              slots.slice(0, 6).map((slot) => (
+                <article key={slot.id} className="card subtle">
                   <div className="splitRow">
                     <div className="stack compactStack">
-                      <strong>{activityLabel(activity.action)}</strong>
-                      <span className="helper">{activitySummary(activity)}</span>
+                      <strong>{slot.class_type}</strong>
+                      <span className="helper">{formatDateTime(slot.start_time)}</span>
                     </div>
-                    <span className="helper">{formatDate(activity.created_at)}</span>
+                    <span className={`tag status-${slot.status}`}>{slot.status}</span>
+                  </div>
+                  <div className="meta topSpacing">
+                    <span className="tag">{slot.available_spots} spots</span>
+                    <span className="tag">{slot.discount_percent}% off</span>
+                    <span className="tag">{formatMoney(discountedPrice(slot.original_price, slot.discount_percent))}</span>
                   </div>
                 </article>
               ))
             ) : (
               <div className="card subtle">
-                <p className="muted">No starter workspace activity is visible right now.</p>
+                <p className="muted">Post the first open slot from Studio settings to start populating this overview.</p>
               </div>
             )}
-          </div>
-          <div className="meta topSpacing">
-            <span className="tag">{members.length} members</span>
-            <span className="tag">{pendingInvites.length} pending invites</span>
-            <span className="tag">{billingSummary?.effectivePlan.name ?? "No plan snapshot"}</span>
           </div>
         </section>
       ) : null}
