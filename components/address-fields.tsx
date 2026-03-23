@@ -1,6 +1,7 @@
 "use client";
 
 import { AddressAutofill } from "@mapbox/search-js-react";
+import { Input } from "@/components/ui/input";
 
 type AddressFieldsProps = {
   section: string;
@@ -58,7 +59,7 @@ export function AddressFields({
   addressLine1Required = false,
 }: AddressFieldsProps) {
   const line1Input = (
-    <input
+    <Input
       id={addressLine1Id}
       name={addressLine1Name}
       type="text"
@@ -72,8 +73,10 @@ export function AddressFields({
   return (
     <>
       <input type="hidden" name={countryCodeName} value={countryCodeValue} />
-      <div className="field">
-        <label htmlFor={addressLine1Id}>{addressLine1Label}</label>
+      <div className="grid gap-2">
+        <label htmlFor={addressLine1Id} className="text-sm font-medium text-foreground">
+          {addressLine1Label}
+        </label>
         {accessToken ? (
           <AddressAutofill
             accessToken={accessToken}
@@ -88,12 +91,14 @@ export function AddressFields({
         ) : (
           line1Input
         )}
-        {helperText ? <p className="helper">{helperText}</p> : null}
+        {helperText ? <p className="text-sm leading-6 text-muted-foreground">{helperText}</p> : null}
       </div>
 
-      <div className="field">
-        <label htmlFor={addressLine2Id}>{addressLine2Label}</label>
-        <input
+      <div className="grid gap-2">
+        <label htmlFor={addressLine2Id} className="text-sm font-medium text-foreground">
+          {addressLine2Label}
+        </label>
+        <Input
           id={addressLine2Id}
           name={addressLine2Name}
           type="text"
@@ -103,10 +108,12 @@ export function AddressFields({
         />
       </div>
 
-      <div className="grid two">
-        <div className="field">
-          <label htmlFor={cityId}>City</label>
-          <input
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <label htmlFor={cityId} className="text-sm font-medium text-foreground">
+            City
+          </label>
+          <Input
             id={cityId}
             name={cityName}
             type="text"
@@ -115,9 +122,11 @@ export function AddressFields({
             placeholder="Montreal"
           />
         </div>
-        <div className="field">
-          <label htmlFor={provinceId}>Province</label>
-          <input
+        <div className="grid gap-2">
+          <label htmlFor={provinceId} className="text-sm font-medium text-foreground">
+            Province
+          </label>
+          <Input
             id={provinceId}
             name={provinceName}
             type="text"
@@ -128,9 +137,11 @@ export function AddressFields({
         </div>
       </div>
 
-      <div className="field">
-        <label htmlFor={postalCodeId}>Postal code</label>
-        <input
+      <div className="grid gap-2">
+        <label htmlFor={postalCodeId} className="text-sm font-medium text-foreground">
+          Postal code
+        </label>
+        <Input
           id={postalCodeId}
           name={postalCodeName}
           type="text"

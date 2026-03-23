@@ -27,6 +27,8 @@ type MarketplaceSlotRow = {
 type BookingDetailRow = {
   id: string;
   payment_status: string;
+  amount_paid: number | null;
+  paid_at: string | null;
   created_at: string;
   slot_id: string;
   slots:
@@ -69,6 +71,8 @@ export type MarketplaceSlot = {
 export type MarketplaceBooking = {
   id: string;
   payment_status: string;
+  amount_paid: number | null;
+  paid_at: string | null;
   created_at: string;
   slot: MarketplaceSlot | null;
 };
@@ -143,7 +147,7 @@ export async function getBookingConfirmation(input: {
   const { data } = await supabase
     .from("bookings")
     .select(
-      "id, payment_status, created_at, slot_id, slots(id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studios(id, name, slug, location_text, city, class_categories, latitude, longitude))"
+      "id, payment_status, amount_paid, paid_at, created_at, slot_id, slots(id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studios(id, name, slug, location_text, city, class_categories, latitude, longitude))"
     )
     .eq("id", bookingId)
     .maybeSingle<BookingDetailRow>();
@@ -157,6 +161,8 @@ export async function getBookingConfirmation(input: {
   return {
     id: data.id,
     payment_status: data.payment_status,
+    amount_paid: data.amount_paid !== null ? Number(data.amount_paid) : null,
+    paid_at: data.paid_at,
     created_at: data.created_at,
     slot: rawSlot
       ? {
@@ -172,4 +178,49 @@ export async function getBookingConfirmation(input: {
         }
       : null,
   } satisfies MarketplaceBooking;
+}
+
+export async function getConsumerBookings(input: {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  consumerUserId: string;
+  limit?: number;
+}) {
+  const { supabase, consumerUserId, limit = 24 } = input;
+
+  const { data } = await supabase
+    .from("bookings")
+    .select(
+      "id, payment_status, amount_paid, paid_at, created_at, slot_id, slots(id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, studios(id, name, slug, location_text, city, class_categories, latitude, longitude))"
+    )
+    .eq("consumer_user_id", consumerUserId)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+    .returns<BookingDetailRow[]>();
+
+  return Array.isArray(data)
+    ? data.map((row) => {
+        const rawSlot = Array.isArray(row.slots) ? row.slots[0] ?? null : row.slots;
+
+        return {
+          id: row.id,
+          payment_status: row.payment_status,
+          amount_paid: row.amount_paid !== null ? Number(row.amount_paid) : null,
+          paid_at: row.paid_at,
+          created_at: row.created_at,
+          slot: rawSlot
+            ? {
+                id: rawSlot.id,
+                class_type: rawSlot.class_type,
+                start_time: rawSlot.start_time,
+                class_length_minutes: rawSlot.class_length_minutes,
+                original_price: Number(rawSlot.original_price),
+                discount_percent: Number(rawSlot.discount_percent),
+                available_spots: rawSlot.available_spots,
+                status: rawSlot.status,
+                studio: normalizeStudio(rawSlot.studios),
+              }
+            : null,
+        } satisfies MarketplaceBooking;
+      })
+    : [];
 }

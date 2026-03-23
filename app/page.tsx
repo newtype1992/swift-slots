@@ -1,81 +1,37 @@
 import Link from "next/link";
-import { DealCard } from "@/components/marketplace/deal-card";
-import { FilterChip } from "@/components/ui/filter-chip";
-import { SectionHeading } from "@/components/ui/section-heading";
+import { ArrowRight, Building2, MapPin, Ticket } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const featuredSlots = [
   {
-    eyebrow: "Live slot",
     title: "Hot Flow Recovery",
-    subtitle: "Mile End Yoga",
+    studio: "Mile End Yoga",
+    time: "Today 6:30 PM",
+    meta: "45 min",
     price: "$14",
     originalPrice: "$28",
-    badges: ["Today 6:30 PM", "45 min", "50% off"],
-    href: "/auth",
-    ctaLabel: "Book now",
-    tone: "navy" as const,
-    visualLabel: "Heat + Restore",
+    discount: "50% off",
   },
   {
-    eyebrow: "Fresh drop",
     title: "HIIT Express",
-    subtitle: "Plateau Strength",
+    studio: "Plateau Strength",
+    time: "In 90 min",
+    meta: "35 min",
     price: "$12",
     originalPrice: "$24",
-    badges: ["In 90 min", "35 min", "50% off"],
-    href: "/auth",
-    ctaLabel: "Book now",
-    tone: "coral" as const,
-    visualLabel: "Fast Burn",
+    discount: "50% off",
   },
   {
-    eyebrow: "Open spot",
-    title: "Deep Stretch Reset",
-    subtitle: "Atwater Mobility",
-    price: "$18",
-    originalPrice: "$32",
-    badges: ["Tonight 7:15 PM", "60 min", "44% off"],
-    href: "/auth",
-    ctaLabel: "Book now",
-    tone: "gold" as const,
-    visualLabel: "Calm + Lengthen",
-  },
-  {
-    eyebrow: "Last minute",
     title: "Pilates Core Lab",
-    subtitle: "Rosemont Reform",
+    studio: "Rosemont Reform",
+    time: "Tomorrow 8:00 AM",
+    meta: "50 min",
     price: "$16",
     originalPrice: "$30",
-    badges: ["Tomorrow 8:00 AM", "50 min", "47% off"],
-    href: "/auth",
-    ctaLabel: "Book now",
-    tone: "teal" as const,
-    visualLabel: "Core Focus",
-  },
-  {
-    eyebrow: "Few left",
-    title: "Run Club Tempo",
-    subtitle: "Canal Track House",
-    price: "$8",
-    originalPrice: "$16",
-    badges: ["Today 5:45 PM", "40 min", "50% off"],
-    href: "/auth",
-    ctaLabel: "Book now",
-    tone: "slate" as const,
-    visualLabel: "Pace Session",
-  },
-  {
-    eyebrow: "Just added",
-    title: "Boxing Conditioning",
-    subtitle: "St Henri Combat",
-    price: "$15",
-    originalPrice: "$29",
-    badges: ["Tonight 8:15 PM", "50 min", "48% off"],
-    href: "/auth",
-    ctaLabel: "Book now",
-    tone: "coral" as const,
-    visualLabel: "Power Round",
+    discount: "47% off",
   },
 ];
 
@@ -84,56 +40,115 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const primaryHref = user ? "/marketplace" : "/auth";
 
   return (
-    <main className="marketingPage">
-      <section className="landingHero">
-        <div className="landingHeroCopy">
-          <span className="landingBadge">Live classes nearby</span>
-          <h1>
-            Grab cancelled slots.
-            <span> Train today. Save big.</span>
-          </h1>
-          <p>
-            Discover discounted same-day fitness classes from Montreal studios. Studios recover revenue and consumers
-            book fast before openings disappear.
-          </p>
-          <div className="landingHeroActions">
-            <Link href={user ? "/marketplace" : "/auth"} className="button">
-              Browse classes now
-            </Link>
-            <Link href={user ? "/settings/studio" : "/auth"} className="buttonSecondary">
-              For studios
-            </Link>
-          </div>
-          <div className="landingHeroMeta">
-            <span>Live inventory updates</span>
-            <span>Montreal only</span>
-            <span>Secure checkout</span>
-          </div>
-        </div>
+    <div className="space-y-8">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">Live marketplace</Badge>
+              <Badge variant="outline">Two-role product</Badge>
+              <Badge variant="outline">Montreal only</Badge>
+            </div>
+            <div className="space-y-3">
+              <CardTitle className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+                Fill last-minute boutique fitness openings without forcing consumers through a generic dashboard.
+              </CardTitle>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
+                Swift Slots splits discovery, bookings, studio setup, and slot management into clear routes. Consumers
+                book fast. Operators manage inventory without inherited starter clutter taking over the UI.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href={primaryHref}>
+                  {user ? "Open marketplace" : "Sign in to start"}
+                  <ArrowRight />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/wireframes">Review approved wireframes</Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                <MapPin className="size-4 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold text-foreground">Consumer discovery</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Marketplace first, then slot detail, checkout, and booking confirmation.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                <Building2 className="size-4 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold text-foreground">Operator structure</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Dashboard for summary, Studio for identity, Slots for posting and monitoring.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                <Ticket className="size-4 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold text-foreground">Pricing clarity</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Original price and discount percent stay explicit across the whole booking flow.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Review path
+            </p>
+            <CardTitle>What to check next</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+            <p>1. Sign in as `consumer.demo@swiftslots.test` and review Marketplace, slot detail, and Bookings.</p>
+            <p>2. Sign in as `studio.olive@swiftslots.test` and review Dashboard, Studio, and Slots.</p>
+            <p>3. Confirm the nav feels shallow, obvious, and role-specific.</p>
+          </CardContent>
+        </Card>
       </section>
 
-      <section className="dealSection">
-        <SectionHeading
-          eyebrow="Marketplace"
-          title="Classes happening now"
-          description="Book the last-minute openings that are already discounted and still live in the app."
-        />
-        <div className="filterChipRow">
-          <FilterChip label="All classes" active />
-          <FilterChip label="Yoga" />
-          <FilterChip label="HIIT" />
-          <FilterChip label="Recovery" />
-          <FilterChip label="Pilates" />
-          <FilterChip label="Run club" />
+      <section className="space-y-4">
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Marketplace preview</p>
+          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground">Example live openings</h2>
         </div>
-        <div className="dealGrid">
+        <div className="grid gap-4 xl:grid-cols-3">
           {featuredSlots.map((slot) => (
-            <DealCard key={`${slot.title}-${slot.subtitle}`} {...slot} />
+            <Card key={`${slot.title}-${slot.studio}`} className="border-border/80 bg-card/95 shadow-sm">
+              <CardHeader className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">{slot.time}</Badge>
+                  <Badge variant="outline">{slot.meta}</Badge>
+                  <Badge>{slot.discount}</Badge>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg">{slot.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{slot.studio}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold tracking-tight text-foreground">{slot.price}</p>
+                    <p className="text-xs text-muted-foreground line-through">{slot.originalPrice}</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full">
+                  <Link href={primaryHref}>Review booking flow</Link>
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

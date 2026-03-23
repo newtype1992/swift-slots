@@ -12,10 +12,27 @@ function nextPath(formData: FormData) {
   const rawNext = String(formData.get("next") || "").trim();
 
   if (!rawNext.startsWith("/")) {
-    return "/dashboard";
+    return null;
   }
 
   return rawNext;
+}
+
+async function defaultWorkspacePath(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string | undefined
+) {
+  if (!userId) {
+    return "/marketplace";
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle<{ role: "studio_operator" | "consumer" }>();
+
+  return profile?.role === "studio_operator" ? "/dashboard" : "/marketplace";
 }
 
 export async function signInAction(formData: FormData) {
@@ -24,13 +41,15 @@ export async function signInAction(formData: FormData) {
   const next = nextPath(formData);
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(`/auth?error=${toMessage(error.message, "Unable to sign in.")}&next=${encodeURIComponent(next)}`);
+    redirect(
+      `/auth?error=${toMessage(error.message, "Unable to sign in.")}&next=${encodeURIComponent(next ?? "/marketplace")}`
+    );
   }
 
-  redirect(next);
+  redirect(next ?? (await defaultWorkspacePath(supabase, data.user?.id)));
 }
 
 export async function signUpAction(formData: FormData) {
@@ -49,14 +68,16 @@ export async function signUpAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/auth?error=${toMessage(error.message, "Unable to sign up.")}&next=${encodeURIComponent(next)}`);
+    redirect(
+      `/auth?error=${toMessage(error.message, "Unable to sign up.")}&next=${encodeURIComponent(next ?? "/marketplace")}`
+    );
   }
 
   if (!data.session) {
     redirect(
-      `/auth?message=Check%20your%20email%20to%20complete%20sign%20up.&next=${encodeURIComponent(next)}`
+      `/auth?message=Check%20your%20email%20to%20complete%20sign%20up.&next=${encodeURIComponent(next ?? "/marketplace")}`
     );
   }
 
-  redirect(next);
+  redirect(next ?? (await defaultWorkspacePath(supabase, data.user?.id)));
 }

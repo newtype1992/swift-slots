@@ -27,11 +27,12 @@ export type StudioSlotRecord = {
   created_at: string;
 };
 
-export async function getOperatorStudioSnapshot(input: {
+async function getStudioForOperator(input: {
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   userId: string;
 }) {
   const { supabase, userId } = input;
+
   const { data: studio } = await supabase
     .from("studios")
     .select(
@@ -40,6 +41,41 @@ export async function getOperatorStudioSnapshot(input: {
     .eq("operator_user_id", userId)
     .maybeSingle<StudioRecord>();
 
+  return studio ?? null;
+}
+
+async function getStudioSlots(input: {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  studioId: string;
+  limit?: number;
+}) {
+  const { supabase, studioId, limit } = input;
+  let query = supabase
+    .from("slots")
+    .select(
+      "id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, created_at"
+    )
+    .eq("studio_id", studioId)
+    .order("start_time", { ascending: true });
+
+  if (typeof limit === "number") {
+    query = query.limit(limit);
+  }
+
+  const { data: slots } = await query.returns<StudioSlotRecord[]>();
+  return Array.isArray(slots) ? slots : [];
+}
+
+export async function getOperatorStudioSlots(input: {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  userId: string;
+}) {
+  const { supabase, userId } = input;
+  const studio = await getStudioForOperator({
+    supabase,
+    userId,
+  });
+
   if (!studio) {
     return {
       studio: null as StudioRecord | null,
@@ -47,18 +83,38 @@ export async function getOperatorStudioSnapshot(input: {
     };
   }
 
-  const { data: slots } = await supabase
-    .from("slots")
-    .select(
-      "id, class_type, start_time, class_length_minutes, original_price, discount_percent, available_spots, status, created_at"
-    )
-    .eq("studio_id", studio.id)
-    .order("start_time", { ascending: true })
-    .limit(8)
-    .returns<StudioSlotRecord[]>();
+  return {
+    studio,
+    slots: await getStudioSlots({
+      supabase,
+      studioId: studio.id,
+    }),
+  };
+}
+
+export async function getOperatorStudioSnapshot(input: {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  userId: string;
+}) {
+  const { supabase, userId } = input;
+  const studio = await getStudioForOperator({
+    supabase,
+    userId,
+  });
+
+  if (!studio) {
+    return {
+      studio: null as StudioRecord | null,
+      slots: [] as StudioSlotRecord[],
+    };
+  }
 
   return {
     studio,
-    slots: Array.isArray(slots) ? slots : [],
+    slots: await getStudioSlots({
+      supabase,
+      studioId: studio.id,
+      limit: 8,
+    }),
   };
 }

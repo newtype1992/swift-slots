@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/swift/page-header";
 import { formatAddress, getProfileCoordinates } from "@/lib/location";
 import { getMarketplaceSlots } from "@/lib/marketplace/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
@@ -17,19 +20,17 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
 
   if (profile?.role !== "consumer") {
     return (
-      <div className="grid">
-        <section className="panel">
-          <p className="eyebrow">Marketplace</p>
-          <h1>Consumer mode required</h1>
-          <p className="muted">Switch this account to the consumer role to browse and book marketplace slots.</p>
-          {params.error ? <p className="message">Error: {params.error}</p> : null}
-          {params.message ? <p className="message">{params.message}</p> : null}
-          <div className="actions">
-            <Link href="/settings/profile" className="button">
-              Update account role
-            </Link>
-          </div>
-        </section>
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="Marketplace"
+          title="Consumer mode required"
+          description="Switch this account to consumer mode to browse and book marketplace slots."
+          actions={
+            <Button asChild>
+              <Link href="/settings/profile">Update account role</Link>
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -47,25 +48,39 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
   });
 
   return (
-    <div className="grid">
-      <section className="panel">
-        <div className="sectionHeader">
-          <div className="stack compactStack">
-            <p className="eyebrow">Marketplace</p>
-            <h1>Book a last-minute class</h1>
-            <p className="muted">
-              Available inventory is already filtered by Supabase booking rules, including the 15-minute lock window, and ranked using your device location whenever available.
-            </p>
-          </div>
-          <div className="metricCard">
-            <p className="eyebrow">Visible now</p>
-            <div className="metricValue">{slots.length}</div>
-            <p className="helper">Slots open to this consumer right now.</p>
-          </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Marketplace"
+        title="Book a last-minute class"
+        description="Available inventory is already filtered by booking rules, including the 15-minute lock window. Filters below help consumers scan quickly without burying the core booking path."
+        meta={
+          <>
+            <Badge variant="outline">{slots.length} visible now</Badge>
+            <Badge variant="outline">{savedCoordinates ? "Fallback location ready" : "No fallback location"}</Badge>
+          </>
+        }
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/bookings">Open bookings</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/settings/profile">Update profile</Link>
+            </Button>
+          </>
+        }
+      />
+
+      {params.error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Error: {params.error}
         </div>
-        {params.error ? <p className="message">Error: {params.error}</p> : null}
-        {params.message ? <p className="message">{params.message}</p> : null}
-      </section>
+      ) : null}
+      {params.message ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {params.message}
+        </div>
+      ) : null}
 
       <MarketplaceResults
         slots={slots}

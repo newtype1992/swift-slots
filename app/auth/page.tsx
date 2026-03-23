@@ -1,4 +1,9 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/swift/page-header";
 import { signInAction, signUpAction } from "./actions";
 
 type AuthPageProps = {
@@ -9,89 +14,129 @@ type AuthPageProps = {
   }>;
 };
 
+const demoAccounts = [
+  { role: "Consumer", email: "consumer.demo@swiftslots.test" },
+  { role: "Operator", email: "studio.olive@swiftslots.test" },
+];
+
 export default async function AuthPage({ searchParams }: AuthPageProps) {
   const params = (await searchParams) ?? {};
-  const next = params.next?.startsWith("/") ? params.next : "/dashboard";
+  const next = params.next?.startsWith("/") ? params.next : "/marketplace";
 
   return (
-    <main className="grid two">
-      <section className="hero">
-        <div className="stack">
-          <p className="eyebrow">Access</p>
-          <h1>Sign in to Swift Slots</h1>
-          <p className="muted">
-            Use the local Supabase stack to create an account, establish a session, and move directly into the workspace.
-          </p>
-        </div>
-        <div className="metricGrid">
-          <div className="metricCard">
-            <p className="eyebrow">Operator</p>
-            <div className="metricValue">Studios</div>
-            <p className="helper">Set up the studio identity and publish short-notice class inventory.</p>
-          </div>
-          <div className="metricCard">
-            <p className="eyebrow">Consumer</p>
-            <div className="metricValue">Bookings</div>
-            <p className="helper">Browse live openings and complete checkout with Stripe test mode.</p>
-          </div>
-        </div>
-        <div className="heroAside">
-          <p className="helper">Seeded local demo users are available after `npm run reset:local`. Their credentials live in the README.</p>
-          <Link href="http://127.0.0.1:54324" className="buttonSecondary">
-            Open local inbox
-          </Link>
-        </div>
-      </section>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Access"
+        title="Sign in to Swift Slots"
+        description="Use the local Supabase stack to create a session and move directly into the role-specific routes."
+        meta={
+          <>
+            <Badge variant="outline">Consumer marketplace</Badge>
+            <Badge variant="outline">Operator slots</Badge>
+          </>
+        }
+        actions={
+          <Button asChild variant="outline">
+            <Link href="http://127.0.0.1:54324">Open local inbox</Link>
+          </Button>
+        }
+      />
 
-      <section className="grid">
-        <div className="panel">
-          <div className="sectionHeader">
-            <div className="stack compactStack">
-              <p className="eyebrow">Existing account</p>
-              <h2>Sign in</h2>
-            </div>
-          </div>
-          {params.error ? <p className="message">Error: {params.error}</p> : null}
-          {params.message ? <p className="message">{params.message}</p> : null}
-          <form action={signInAction} className="form">
-            <input type="hidden" name="next" value={next} />
-            <div className="field">
-              <label htmlFor="sign-in-email">Email</label>
-              <input id="sign-in-email" name="email" type="email" required />
-            </div>
-            <div className="field">
-              <label htmlFor="sign-in-password">Password</label>
-              <input id="sign-in-password" name="password" type="password" minLength={6} required />
-            </div>
-            <button type="submit" className="button">
-              Sign in
-            </button>
-          </form>
+      {params.error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Error: {params.error}
         </div>
+      ) : null}
+      {params.message ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {params.message}
+        </div>
+      ) : null}
 
-        <div className="panel">
-          <div className="sectionHeader">
-            <div className="stack compactStack">
-              <p className="eyebrow">New account</p>
-              <h2>Create account</h2>
-            </div>
-          </div>
-          <form action={signUpAction} className="form">
-            <input type="hidden" name="next" value={next} />
-            <div className="field">
-              <label htmlFor="sign-up-email">Email</label>
-              <input id="sign-up-email" name="email" type="email" required />
-            </div>
-            <div className="field">
-              <label htmlFor="sign-up-password">Password</label>
-              <input id="sign-up-password" name="password" type="password" minLength={6} required />
-            </div>
-            <button type="submit" className="button">
-              Create account
-            </button>
-          </form>
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Demo accounts</CardTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Local seeded users are the fastest way to review the new route split.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {demoAccounts.map((account) => (
+              <div key={account.email} className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {account.role}
+                </p>
+                <p className="mt-2 text-sm font-medium text-foreground">{account.email}</p>
+                <p className="mt-1 text-sm text-muted-foreground">Password: `password123`</p>
+              </div>
+            ))}
+            <p className="text-sm leading-6 text-muted-foreground">
+              Use `consumer.demo` for Marketplace and Bookings. Use `studio.olive` for Dashboard, Studio, and Slots.
+            </p>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="border-border/80 bg-card/95 shadow-sm">
+            <CardHeader className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Existing account
+              </p>
+              <CardTitle>Sign in</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={signInAction} className="grid gap-4">
+                <input type="hidden" name="next" value={next} />
+                <div className="grid gap-2">
+                  <label htmlFor="sign-in-email" className="text-sm font-medium text-foreground">
+                    Email
+                  </label>
+                  <Input id="sign-in-email" name="email" type="email" required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="sign-in-password" className="text-sm font-medium text-foreground">
+                    Password
+                  </label>
+                  <Input id="sign-in-password" name="password" type="password" minLength={6} required />
+                </div>
+                <Button type="submit" className="w-full">
+                  Sign in
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/80 bg-card/95 shadow-sm">
+            <CardHeader className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                New account
+              </p>
+              <CardTitle>Create account</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={signUpAction} className="grid gap-4">
+                <input type="hidden" name="next" value={next} />
+                <div className="grid gap-2">
+                  <label htmlFor="sign-up-email" className="text-sm font-medium text-foreground">
+                    Email
+                  </label>
+                  <Input id="sign-up-email" name="email" type="email" required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="sign-up-password" className="text-sm font-medium text-foreground">
+                    Password
+                  </label>
+                  <Input id="sign-up-password" name="password" type="password" minLength={6} required />
+                </div>
+                <Button type="submit" variant="outline" className="w-full">
+                  Create account
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

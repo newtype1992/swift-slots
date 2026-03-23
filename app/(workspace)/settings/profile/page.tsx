@@ -1,5 +1,11 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { AddressFields } from "@/components/address-fields";
+import { NativeSelect } from "@/components/swift/native-select";
+import { PageHeader } from "@/components/swift/page-header";
 import { formatAddress } from "@/lib/location";
 import { updateProfileAction } from "../actions";
 import { getOperatorStudioSnapshot } from "@/lib/studios/server";
@@ -31,120 +37,152 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
   });
 
   return (
-    <div className="grid">
-      <section className="panel">
-        <p className="eyebrow">Profile</p>
-        <h2>Account settings</h2>
-        <p className="muted">
-          Keep profile information separate from workspace administration so the starter has a cleaner default IA.
-        </p>
-        {params.error ? <p className="message">Error: {params.error}</p> : null}
-        {params.message ? <p className="message">{params.message}</p> : null}
-      </section>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Profile"
+        title="Account and fallback location"
+        description="Keep profile information separate from studio management and legacy workspace administration."
+        meta={
+          <>
+            <Badge variant="outline">{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</Badge>
+            <Badge variant="outline">{savedAddress ? "Location saved" : "No saved location"}</Badge>
+          </>
+        }
+        actions={
+          profile?.role === "studio_operator" ? (
+            <Button asChild>
+              <Link href="/settings/studio">Open studio profile</Link>
+            </Button>
+          ) : undefined
+        }
+      />
 
-      <section className="grid two">
-        <article className="panel">
-          <h3>Identity</h3>
-          <div className="list compact">
-            <div className="card subtle">
-              <span className="helper">Email</span>
-              <strong>{profile?.email ?? user.email ?? "Unknown email"}</strong>
+      {params.error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Error: {params.error}
+        </div>
+      ) : null}
+      {params.message ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {params.message}
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Current identity</CardTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Quick account context and the remaining starter-era access that is still attached to this login.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Email</p>
+              <p className="mt-2 font-medium text-foreground">{profile?.email ?? user.email ?? "Unknown email"}</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Role</span>
-              <strong>{profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}</strong>
-              <p className="helper">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Role</p>
+              <p className="mt-2 font-medium text-foreground">
+                {profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 {profile?.role === "studio_operator"
                   ? studio
                     ? `Studio linked: ${studio.name}`
                     : "No studio profile created yet."
-                  : "This account can browse live openings and falls back to the saved address if device location is unavailable."}
+                  : "This account can browse live openings and fall back to the saved address if device location is unavailable."}
               </p>
             </div>
-            <div className="card subtle">
-              <span className="helper">User ID</span>
-              <p className="helper mono">{user.id}</p>
-            </div>
-            <div className="card subtle">
-              <span className="helper">Legacy workspace access</span>
-              <strong>{organizations.length} organizations</strong>
-              <p className="helper">
-                {activeOrganization
-                  ? `Active starter workspace: ${activeOrganization.name}. These controls are now hidden from the primary product navigation.`
-                  : "No inherited starter workspace is selected right now."}
-              </p>
-            </div>
-            <div className="card subtle">
-              <span className="helper">Saved fallback location</span>
-              <strong>{savedAddress || "No saved address yet"}</strong>
-              <p className="helper">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saved fallback location</p>
+              <p className="mt-2 font-medium text-foreground">{savedAddress || "No saved address yet"}</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 {profile?.latitude && profile?.longitude
                   ? "Ready to use when device geolocation is unavailable."
                   : "Add an address to enable marketplace fallback when location permission is denied."}
               </p>
             </div>
-          </div>
-        </article>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Legacy workspace access</p>
+              <p className="mt-2 font-medium text-foreground">{organizations.length} organizations</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {activeOrganization
+                  ? `Active starter workspace: ${activeOrganization.name}. These controls are now hidden from the primary product navigation.`
+                  : "No inherited starter workspace is selected right now."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <article className="panel">
-          <h3>Public profile</h3>
-          <form action={updateProfileAction} className="form">
-            <input type="hidden" name="redirectTo" value="/settings/profile" />
-            <div className="field">
-              <label htmlFor="full-name">Full name</label>
-              <input
-                id="full-name"
-                name="fullName"
-                type="text"
-                defaultValue={profile?.full_name ?? ""}
-                placeholder="Your display name"
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Edit profile</CardTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Email and authentication methods remain managed by Supabase Auth. Role and fallback location stay here.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form action={updateProfileAction} className="grid gap-4">
+              <input type="hidden" name="redirectTo" value="/settings/profile" />
+
+              <div className="grid gap-2">
+                <label htmlFor="full-name" className="text-sm font-medium text-foreground">
+                  Full name
+                </label>
+                <Input
+                  id="full-name"
+                  name="fullName"
+                  type="text"
+                  defaultValue={profile?.full_name ?? ""}
+                  placeholder="Your display name"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="role" className="text-sm font-medium text-foreground">
+                  Account role
+                </label>
+                <NativeSelect id="role" name="role" defaultValue={profile?.role ?? "consumer"}>
+                  <option value="consumer">Consumer</option>
+                  <option value="studio_operator">Studio operator</option>
+                </NativeSelect>
+              </div>
+
+              <AddressFields
+                section="profile"
+                addressLine1Name="addressLine1"
+                addressLine1Id="profile-address-line1"
+                addressLine1Label="Saved fallback address"
+                addressLine1Value={profile?.address_line1}
+                addressLine2Name="addressLine2"
+                addressLine2Id="profile-address-line2"
+                addressLine2Value={profile?.address_line2}
+                cityName="city"
+                cityId="profile-city"
+                cityValue={profile?.city}
+                provinceName="province"
+                provinceId="profile-province"
+                provinceValue={profile?.province}
+                postalCodeName="postalCode"
+                postalCodeId="profile-postal-code"
+                postalCodeValue={profile?.postal_code}
+                countryCodeValue={profile?.country_code || "CA"}
+                helperText="Used only when device location is unavailable or permission is denied."
               />
-            </div>
-            <div className="field">
-              <label htmlFor="role">Account role</label>
-              <select id="role" name="role" className="select" defaultValue={profile?.role ?? "consumer"}>
-                <option value="consumer">Consumer</option>
-                <option value="studio_operator">Studio operator</option>
-              </select>
-            </div>
-            <AddressFields
-              section="profile"
-              addressLine1Name="addressLine1"
-              addressLine1Id="profile-address-line1"
-              addressLine1Label="Saved fallback address"
-              addressLine1Value={profile?.address_line1}
-              addressLine2Name="addressLine2"
-              addressLine2Id="profile-address-line2"
-              addressLine2Value={profile?.address_line2}
-              cityName="city"
-              cityId="profile-city"
-              cityValue={profile?.city}
-              provinceName="province"
-              provinceId="profile-province"
-              provinceValue={profile?.province}
-              postalCodeName="postalCode"
-              postalCodeId="profile-postal-code"
-              postalCodeValue={profile?.postal_code}
-              countryCodeValue={profile?.country_code || "CA"}
-              helperText="Used only when device location is unavailable or permission is denied."
-            />
-            <button type="submit" className="button">
-              Save profile
-            </button>
-          </form>
-          <p className="helper">
-            Email and authentication methods remain managed by Supabase Auth. Studio operators create or edit the actual
-            studio record from the dedicated studio settings screen.
-          </p>
-          {profile?.role === "studio_operator" ? (
-            <div className="actions topSpacing">
-              <Link href="/settings/studio" className="buttonSecondary">
-                Open studio settings
-              </Link>
-            </div>
-          ) : null}
-        </article>
-      </section>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button type="submit">Save profile</Button>
+                {profile?.role === "studio_operator" ? (
+                  <Button asChild variant="outline">
+                    <Link href="/settings/studio">Studio profile</Link>
+                  </Button>
+                ) : null}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

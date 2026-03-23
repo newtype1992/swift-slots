@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/swift/page-header";
+import { SlotStatusBadge } from "@/components/studio/slot-status-badge";
 import { discountedPrice, getBookingConfirmation } from "@/lib/marketplace/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
 
@@ -48,68 +53,94 @@ export default async function BookingConfirmationPage({ params, searchParams }: 
     notFound();
   }
 
+  const reservedAmount =
+    booking.amount_paid ?? discountedPrice(booking.slot.original_price, booking.slot.discount_percent);
+
   return (
-    <div className="grid">
-      <section className="panel">
-        <div className="sectionHeader">
-          <div className="stack compactStack">
-            <p className="eyebrow">Booking confirmed</p>
-            <h1>{booking.slot.class_type}</h1>
-            <p className="muted">
-              {booking.slot.studio?.name ?? "Unknown studio"} - {booking.slot.studio?.location_text ?? "Montreal"}
-            </p>
-          </div>
-          <div className={`tag status-${booking.payment_status}`}>{booking.payment_status}</div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Booking confirmation"
+        title={booking.slot.class_type}
+        description={`${booking.slot.studio?.name ?? "Unknown studio"} | ${booking.slot.studio?.location_text ?? "Montreal"}`}
+        meta={<SlotStatusBadge status={booking.payment_status} />}
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/bookings">View all bookings</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/marketplace">Back to marketplace</Link>
+            </Button>
+          </>
+        }
+      />
+
+      {query.error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Error: {query.error}
         </div>
-        {query.error ? <p className="message">Error: {query.error}</p> : null}
-        {query.message ? <p className="message">{query.message}</p> : null}
-        {booking.payment_status !== "paid" ? (
-          <p className="message">Payment is still processing. Refresh this page shortly if the status does not update.</p>
-        ) : null}
-      </section>
+      ) : null}
+      {query.message ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {query.message}
+        </div>
+      ) : null}
+      {booking.payment_status !== "paid" ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          Payment is still processing. Refresh shortly if the status does not update.
+        </div>
+      ) : null}
 
-      <section className="grid two">
-        <article className="panel">
-          <h2>Confirmation</h2>
-          <div className="list">
-            <div className="card subtle">
-              <span className="helper">Booking ID</span>
-              <p className="helper mono">{booking.id}</p>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Confirmation</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Booking ID</p>
+              <p className="mt-2 text-sm font-medium text-foreground break-all">{booking.id}</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Class start</span>
-              <strong>{formatDateTime(booking.slot.start_time)}</strong>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Payment status</p>
+              <div className="mt-2">
+                <SlotStatusBadge status={booking.payment_status} />
+              </div>
             </div>
-            <div className="card subtle">
-              <span className="helper">Payment status</span>
-              <strong>{booking.payment_status}</strong>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Class start</p>
+              <p className="mt-2 font-medium text-foreground">{formatDateTime(booking.slot.start_time)}</p>
             </div>
-          </div>
-        </article>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Location</p>
+              <p className="mt-2 font-medium text-foreground">{booking.slot.studio?.location_text ?? "Montreal"}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <article className="panel">
-          <h2>Pricing</h2>
-          <div className="list">
-            <div className="card subtle">
-              <span className="helper">Original price</span>
-              <strong>{formatMoney(booking.slot.original_price)}</strong>
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Pricing</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Original price</p>
+              <p className="mt-2 font-medium text-foreground">{formatMoney(booking.slot.original_price)}</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Discount applied</span>
-              <strong>{booking.slot.discount_percent}% off</strong>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Discount applied</p>
+              <p className="mt-2 font-medium text-foreground">{booking.slot.discount_percent}% off</p>
             </div>
-            <div className="card subtle activeCard">
-              <span className="helper">Reserved amount</span>
-              <strong>{formatMoney(discountedPrice(booking.slot.original_price, booking.slot.discount_percent))}</strong>
+            <div className="rounded-2xl border border-primary/12 bg-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">Reserved amount</p>
+              <p className="mt-2 text-xl font-semibold tracking-tight text-primary">{formatMoney(reservedAmount)}</p>
+              {booking.amount_paid ? (
+                <p className="mt-1 text-sm text-primary/80">Captured payment</p>
+              ) : null}
             </div>
-          </div>
-          <div className="actions topSpacing">
-            <Link href="/marketplace" className="button">
-              Back to marketplace
-            </Link>
-          </div>
-        </article>
-      </section>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/swift/page-header";
 import { createBookingAction } from "../actions";
 import { discountedPrice, getMarketplaceSlot } from "@/lib/marketplace/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
@@ -41,17 +45,17 @@ export default async function MarketplaceSlotDetailPage({
 
   if (profile?.role !== "consumer") {
     return (
-      <div className="grid">
-        <section className="panel">
-          <p className="eyebrow">Marketplace</p>
-          <h1>Consumer mode required</h1>
-          <p className="muted">Switch this account to the consumer role to review and book marketplace slots.</p>
-          <div className="actions">
-            <Link href="/settings/profile" className="button">
-              Update account role
-            </Link>
-          </div>
-        </section>
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="Slot detail"
+          title="Consumer mode required"
+          description="Switch this account to the consumer role to review and book marketplace slots."
+          actions={
+            <Button asChild>
+              <Link href="/settings/profile">Update account role</Link>
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -68,87 +72,98 @@ export default async function MarketplaceSlotDetailPage({
   const priceNow = discountedPrice(slot.original_price, slot.discount_percent);
 
   return (
-    <div className="grid">
-      <section className="panel">
-        <div className="sectionHeader">
-          <div className="stack compactStack">
-            <p className="eyebrow">Marketplace</p>
-            <h1>{slot.class_type}</h1>
-            <p className="muted">
-              {slot.studio?.name ?? "Unknown studio"} - {slot.studio?.location_text ?? "Montreal"}
-            </p>
-          </div>
-          <div className="metricCard">
-            <p className="eyebrow">Live inventory</p>
-            <div className="metricValue">{slot.available_spots}</div>
-            <p className="helper">Spots still available for this class.</p>
-          </div>
-        </div>
-        {query.error ? <p className="message">Error: {query.error}</p> : null}
-        {query.message ? <p className="message">{query.message}</p> : null}
-      </section>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Slot detail"
+        title={slot.class_type}
+        description={`${slot.studio?.name ?? "Unknown studio"} | ${slot.studio?.location_text ?? "Montreal"}`}
+        meta={
+          <>
+            <Badge variant="outline">{slot.available_spots} spots left</Badge>
+            <Badge variant="outline">{slot.discount_percent}% off</Badge>
+          </>
+        }
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/marketplace">Back to marketplace</Link>
+          </Button>
+        }
+      />
 
-      <section className="grid two">
-        <article className="panel">
-          <h2>Class details</h2>
-          <div className="list">
-            <div className="card subtle">
-              <span className="helper">Starts</span>
-              <strong>{formatDateTime(slot.start_time)}</strong>
+      {query.error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Error: {query.error}
+        </div>
+      ) : null}
+      {query.message ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {query.message}
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Class details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Starts</p>
+              <p className="mt-2 font-medium text-foreground">{formatDateTime(slot.start_time)}</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Class length</span>
-              <strong>{slot.class_length_minutes} minutes</strong>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Class length</p>
+              <p className="mt-2 font-medium text-foreground">{slot.class_length_minutes} minutes</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Studio</span>
-              <strong>{slot.studio?.name ?? "Unknown studio"}</strong>
-              <p className="helper">{slot.studio?.location_text ?? "Montreal"}</p>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Studio</p>
+              <p className="mt-2 font-medium text-foreground">{slot.studio?.name ?? "Unknown studio"}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{slot.studio?.location_text ?? "Montreal"}</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Categories</span>
-              <div className="meta topSpacing">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Categories</p>
+              <div className="mt-2 flex flex-wrap gap-2">
                 {(slot.studio?.class_categories?.length ? slot.studio.class_categories : ["No categories listed"]).map((category) => (
-                  <span key={category} className="tag">
+                  <Badge key={category} variant="outline">
                     {category}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
-          </div>
-        </article>
+          </CardContent>
+        </Card>
 
-        <article className="panel">
-          <h2>Book this slot</h2>
-          <div className="list">
-            <div className="card subtle">
-              <span className="helper">Original price</span>
-              <strong>{formatMoney(slot.original_price)}</strong>
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle>Book this slot</CardTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Pricing is derived from original price plus discount percent, then passed into Stripe checkout.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Original price</p>
+              <p className="mt-2 font-medium text-foreground">{formatMoney(slot.original_price)}</p>
             </div>
-            <div className="card subtle">
-              <span className="helper">Discount</span>
-              <strong>{slot.discount_percent}% off</strong>
+            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Discount</p>
+              <p className="mt-2 font-medium text-foreground">{slot.discount_percent}% off</p>
             </div>
-            <div className="card subtle activeCard">
-              <span className="helper">You pay now</span>
-              <strong>{formatMoney(priceNow)}</strong>
-              <p className="helper">{slot.available_spots} spots still available.</p>
+            <div className="rounded-2xl border border-primary/12 bg-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">You pay now</p>
+              <p className="mt-2 text-xl font-semibold tracking-tight text-primary">{formatMoney(priceNow)}</p>
+              <p className="mt-1 text-sm text-primary/80">{slot.available_spots} spots still available.</p>
             </div>
-          </div>
-          <form action={createBookingAction} className="form topSpacing">
-            <input type="hidden" name="slotId" value={slot.id} />
-            <input type="hidden" name="redirectTo" value={`/marketplace/${slot.id}`} />
-            <button type="submit" className="button">
-              Reserve spot and pay
-            </button>
-          </form>
-          <div className="actions topSpacing">
-            <Link href="/marketplace" className="buttonSecondary">
-              Back to marketplace
-            </Link>
-          </div>
-        </article>
-      </section>
+            <form action={createBookingAction} className="grid gap-3">
+              <input type="hidden" name="slotId" value={slot.id} />
+              <input type="hidden" name="redirectTo" value={`/marketplace/${slot.id}`} />
+              <Button type="submit" className="w-full">
+                Reserve spot and pay
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
