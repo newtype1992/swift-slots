@@ -3,6 +3,7 @@ import { ArrowRight, Building2, MapPin, Ticket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InsetPanel } from "@/components/swift/inset-panel";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const featuredSlots = [
@@ -75,27 +76,27 @@ export default async function HomePage() {
               </Button>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <InsetPanel>
                 <MapPin className="size-4 text-muted-foreground" />
                 <p className="mt-3 text-sm font-semibold text-foreground">Consumer discovery</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   Marketplace first, then slot detail, checkout, and booking confirmation.
                 </p>
-              </div>
-              <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              </InsetPanel>
+              <InsetPanel>
                 <Building2 className="size-4 text-muted-foreground" />
                 <p className="mt-3 text-sm font-semibold text-foreground">Operator structure</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   Dashboard for summary, Studio for identity, Slots for posting and monitoring.
                 </p>
-              </div>
-              <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              </InsetPanel>
+              <InsetPanel>
                 <Ticket className="size-4 text-muted-foreground" />
                 <p className="mt-3 text-sm font-semibold text-foreground">Pricing clarity</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   Original price and discount percent stay explicit across the whole booking flow.
                 </p>
-              </div>
+              </InsetPanel>
             </div>
           </CardContent>
         </Card>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InsetPanel } from "@/components/swift/inset-panel";
 import { createSlotAction } from "@/app/(workspace)/settings/actions";
 
 type SlotComposerProps = {
@@ -108,7 +109,7 @@ export function SlotComposer({ studioId, redirectTo }: SlotComposerProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-muted/40 p-4">
+      <InsetPanel>
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Derived price preview
         </p>
@@ -118,7 +119,7 @@ export function SlotComposer({ studioId, redirectTo }: SlotComposerProps) {
         <p className="mt-1 text-sm text-muted-foreground">
           Swift Slots stores original price plus discount percent, then derives the live booking price.
         </p>
-      </div>
+      </InsetPanel>
 
       <Button type="submit" className="w-full md:w-auto">
         Publish slot

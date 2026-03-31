@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { formatAddress, getProfileCoordinates } from "@/lib/location";
 import { getMarketplaceSlots } from "@/lib/marketplace/server";
@@ -71,16 +72,8 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
         }
       />
 
-      {params.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {params.error}
-        </div>
-      ) : null}
-      {params.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {params.message}
-        </div>
-      ) : null}
+      {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
+      {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       <MarketplaceResults
         slots={slots}

@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/swift/empty-state";
+import { InsetPanel } from "@/components/swift/inset-panel";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { openBillingPortalAction, startCheckoutAction } from "@/app/dashboard/actions";
 import { PLAN_CATALOG } from "@/lib/billing/plans";
@@ -48,16 +50,8 @@ export default async function BillingSettingsPage({ searchParams }: BillingSetti
         description="This inherited starter billing surface is still reachable, but it has been removed from the main Swift Slots navigation."
       />
 
-      {params.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {params.error}
-        </div>
-      ) : null}
-      {params.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {params.message}
-        </div>
-      ) : null}
+      {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
+      {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       {canViewBilling && billing && billingSummary ? (
         <>
@@ -89,18 +83,18 @@ export default async function BillingSettingsPage({ searchParams }: BillingSetti
                 <CardTitle>Entitlements</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                <InsetPanel>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seats remaining</p>
                   <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{billingSummary.seatsRemaining}</p>
-                </div>
-                <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                </InsetPanel>
+                <InsetPanel>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending invites</p>
                   <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{billingSummary.usage.pendingInviteCount}</p>
-                </div>
-                <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+                </InsetPanel>
+                <InsetPanel>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">History window</p>
                   <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{billingSummary.effectivePlan.inviteHistoryLabel}</p>
-                </div>
+                </InsetPanel>
               </CardContent>
             </Card>
           </div>

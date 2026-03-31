@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OperatorSlotCard } from "@/components/studio/operator-slot-card";
 import { SlotComposer } from "@/components/studio/slot-composer";
 import { EmptyState } from "@/components/swift/empty-state";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { getOperatorStudioSlots } from "@/lib/studios/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
@@ -81,16 +82,8 @@ export default async function SlotsPage({ searchParams }: SlotsPageProps) {
         }
       />
 
-      {params.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {params.error}
-        </div>
-      ) : null}
-      {params.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {params.message}
-        </div>
-      ) : null}
+      {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
+      {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       {studio ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">

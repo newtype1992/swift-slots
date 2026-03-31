@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { InsetPanel } from "@/components/swift/inset-panel";
 import { PageHeader } from "@/components/swift/page-header";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
 import { SettingsNav } from "./settings-nav";
@@ -28,7 +29,7 @@ export default async function SettingsLayout({
         <CardContent className="space-y-4 pt-6">
           <SettingsNav role={profile?.role ?? "consumer"} />
           {activeOrganization ? (
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            <InsetPanel>
               <p className="text-sm font-semibold text-foreground">Legacy starter controls</p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 Organization and billing remain accessible here while the inherited starter layer is phased down.
@@ -41,7 +42,7 @@ export default async function SettingsLayout({
                   <Link href="/settings/billing">Billing</Link>
                 </Button>
               </div>
-            </div>
+            </InsetPanel>
           ) : null}
         </CardContent>
       </Card>

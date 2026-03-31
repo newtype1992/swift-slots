@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { InsetPanel } from "@/components/swift/inset-panel";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { signInAction, signUpAction } from "./actions";
 
@@ -42,16 +44,8 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
         }
       />
 
-      {params.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {params.error}
-        </div>
-      ) : null}
-      {params.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {params.message}
-        </div>
-      ) : null}
+      {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
+      {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <Card className="border-border/80 bg-card/95 shadow-sm">
@@ -63,13 +57,13 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {demoAccounts.map((account) => (
-              <div key={account.email} className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+              <InsetPanel key={account.email}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   {account.role}
                 </p>
                 <p className="mt-2 text-sm font-medium text-foreground">{account.email}</p>
                 <p className="mt-1 text-sm text-muted-foreground">Password: `password123`</p>
-              </div>
+              </InsetPanel>
             ))}
             <p className="text-sm leading-6 text-muted-foreground">
               Use `consumer.demo` for Marketplace and Bookings. Use `studio.olive` for Dashboard, Studio, and Slots.

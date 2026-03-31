@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/swift/empty-state";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { acceptInviteAction } from "../actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -78,16 +79,8 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
         }
       />
 
-      {query.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {query.error}
-        </div>
-      ) : null}
-      {isExpired ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          This invite has expired. Ask an organization owner to resend it.
-        </div>
-      ) : null}
+      {query.error ? <Notice tone="error">Error: {query.error}</Notice> : null}
+      {isExpired ? <Notice tone="warning">This invite has expired. Ask an organization owner to resend it.</Notice> : null}
 
       <Card className="border-border/80 bg-card/95 shadow-sm">
         <CardHeader className="space-y-2">

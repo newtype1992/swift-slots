@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InsetPanel } from "@/components/swift/inset-panel";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { createBookingAction } from "../actions";
 import { discountedPrice, getMarketplaceSlot } from "@/lib/marketplace/server";
@@ -90,16 +92,8 @@ export default async function MarketplaceSlotDetailPage({
         }
       />
 
-      {query.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {query.error}
-        </div>
-      ) : null}
-      {query.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {query.message}
-        </div>
-      ) : null}
+      {query.error ? <Notice tone="error">Error: {query.error}</Notice> : null}
+      {query.message ? <Notice tone="success">{query.message}</Notice> : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card className="border-border/80 bg-card/95 shadow-sm">
@@ -107,20 +101,20 @@ export default async function MarketplaceSlotDetailPage({
             <CardTitle>Class details</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Starts</p>
               <p className="mt-2 font-medium text-foreground">{formatDateTime(slot.start_time)}</p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Class length</p>
               <p className="mt-2 font-medium text-foreground">{slot.class_length_minutes} minutes</p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Studio</p>
               <p className="mt-2 font-medium text-foreground">{slot.studio?.name ?? "Unknown studio"}</p>
               <p className="mt-1 text-sm text-muted-foreground">{slot.studio?.location_text ?? "Montreal"}</p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Categories</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {(slot.studio?.class_categories?.length ? slot.studio.class_categories : ["No categories listed"]).map((category) => (
@@ -129,7 +123,7 @@ export default async function MarketplaceSlotDetailPage({
                   </Badge>
                 ))}
               </div>
-            </div>
+            </InsetPanel>
           </CardContent>
         </Card>
 
@@ -141,14 +135,14 @@ export default async function MarketplaceSlotDetailPage({
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Original price</p>
               <p className="mt-2 font-medium text-foreground">{formatMoney(slot.original_price)}</p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Discount</p>
               <p className="mt-2 font-medium text-foreground">{slot.discount_percent}% off</p>
-            </div>
+            </InsetPanel>
             <div className="rounded-2xl border border-primary/12 bg-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">You pay now</p>
               <p className="mt-2 text-xl font-semibold tracking-tight text-primary">{formatMoney(priceNow)}</p>

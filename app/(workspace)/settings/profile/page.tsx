@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AddressFields } from "@/components/address-fields";
+import { InsetPanel } from "@/components/swift/inset-panel";
 import { NativeSelect } from "@/components/swift/native-select";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { formatAddress } from "@/lib/location";
 import { updateProfileAction } from "../actions";
@@ -57,16 +59,8 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
         }
       />
 
-      {params.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {params.error}
-        </div>
-      ) : null}
-      {params.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {params.message}
-        </div>
-      ) : null}
+      {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
+      {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <Card className="border-border/80 bg-card/95 shadow-sm">
@@ -77,11 +71,11 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
             </p>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Email</p>
               <p className="mt-2 font-medium text-foreground">{profile?.email ?? user.email ?? "Unknown email"}</p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Role</p>
               <p className="mt-2 font-medium text-foreground">
                 {profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}
@@ -93,8 +87,8 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
                     : "No studio profile created yet."
                   : "This account can browse live openings and fall back to the saved address if device location is unavailable."}
               </p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saved fallback location</p>
               <p className="mt-2 font-medium text-foreground">{savedAddress || "No saved address yet"}</p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -102,8 +96,8 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
                   ? "Ready to use when device geolocation is unavailable."
                   : "Add an address to enable marketplace fallback when location permission is denied."}
               </p>
-            </div>
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-4">
+            </InsetPanel>
+            <InsetPanel>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Legacy workspace access</p>
               <p className="mt-2 font-medium text-foreground">{organizations.length} organizations</p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -111,7 +105,7 @@ export default async function ProfileSettingsPage({ searchParams }: ProfileSetti
                   ? `Active starter workspace: ${activeOrganization.name}. These controls are now hidden from the primary product navigation.`
                   : "No inherited starter workspace is selected right now."}
               </p>
-            </div>
+            </InsetPanel>
           </CardContent>
         </Card>
 

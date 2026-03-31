@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookingCard } from "@/components/bookings/booking-card";
 import { EmptyState } from "@/components/swift/empty-state";
+import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
 import { getConsumerBookings } from "@/lib/marketplace/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
@@ -67,16 +68,8 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
         }
       />
 
-      {params.error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Error: {params.error}
-        </div>
-      ) : null}
-      {params.message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {params.message}
-        </div>
-      ) : null}
+      {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
+      {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       {bookings.length > 0 ? (
         <div className="grid gap-4">
