@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { InsetPanel } from "@/components/swift/inset-panel";
 import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
-import { signInAction, signUpAction } from "./actions";
+import { signInAction, signUpAction } from "@/app/auth/actions";
 
 type AuthPageProps = {
   searchParams?: Promise<{

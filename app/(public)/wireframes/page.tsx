@@ -1,4 +1,4 @@
-import styles from "./wireframes.module.css";
+import styles from "@/app/wireframes/wireframes.module.css";
 
 function Annotation({
   goal,

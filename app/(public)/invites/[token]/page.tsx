@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/swift/empty-state";
 import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
-import { acceptInviteAction } from "../actions";
+import { acceptInviteAction } from "@/app/invites/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type InvitePageProps = {
