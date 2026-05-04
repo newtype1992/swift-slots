@@ -9,6 +9,7 @@ import { createSlotAction } from "@/app/(workspace)/settings/actions";
 type SlotComposerProps = {
   studioId: string;
   redirectTo: string;
+  successRedirectTo?: string;
 };
 
 function formatMoney(amount: number) {
@@ -18,7 +19,7 @@ function formatMoney(amount: number) {
   }).format(amount);
 }
 
-export function SlotComposer({ studioId, redirectTo }: SlotComposerProps) {
+export function SlotComposer({ studioId, redirectTo, successRedirectTo }: SlotComposerProps) {
   const [originalPrice, setOriginalPrice] = useState("32");
   const [discountPercent, setDiscountPercent] = useState("25");
 
@@ -36,6 +37,7 @@ export function SlotComposer({ studioId, redirectTo }: SlotComposerProps) {
   return (
     <form action={createSlotAction} className="grid gap-4">
       <input type="hidden" name="redirectTo" value={redirectTo} />
+      <input type="hidden" name="successRedirectTo" value={successRedirectTo ?? redirectTo} />
       <input type="hidden" name="studioId" value={studioId} />
 
       <div className="grid gap-2">

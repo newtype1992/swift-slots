@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +24,72 @@ export default async function WorkspaceLayout({
       : { studio: null };
 
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 pb-12 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-6">
-      <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+    <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:grid-cols-[300px_minmax(0,1fr)] lg:px-6 lg:pb-12">
+      <section className="space-y-4 lg:hidden">
+        <Card className="border-border/70 bg-card/95">
+          <CardHeader className="space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">Swift Slots</p>
+                  <Badge variant="outline" className="capitalize">
+                    {profile?.role === "studio_operator" ? "Studio operator" : "Consumer"}
+                  </Badge>
+                  <Badge variant="outline">{studio ? "Studio connected" : "Live app"}</Badge>
+                </div>
+                <div className="space-y-1">
+                  <CardTitle className="text-xl">
+                    {profile?.role === "studio_operator" ? "Operator workspace" : "Booking workspace"}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">{profile?.email ?? "Unknown email"}</p>
+                </div>
+              </div>
+
+              {profile?.role === "studio_operator" ? (
+                <WorkspaceNav
+                  role={profile.role}
+                  variant="mobile-top"
+                  profileEmail={profile?.email ?? null}
+                  studioName={studio?.name ?? null}
+                  studioLocation={studio?.location_text ?? null}
+                  showLegacyLink={Boolean(activeOrganization)}
+                />
+              ) : (
+                <form action={signOutAction}>
+                  <Button type="submit" variant="ghost" size="icon-sm" aria-label="Sign out">
+                    <LogOut />
+                  </Button>
+                </form>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile?.role === "studio_operator" ? (
+              <>
+                {studio ? (
+                  <div className="rounded-2xl border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(242,246,255,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <p className="text-sm font-semibold text-foreground">{studio.name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{studio.location_text}</p>
+                  </div>
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
+                    Create the studio profile from Studio settings to start publishing slots.
+                  </p>
+                )}
+                <p className="rounded-2xl border border-dashed border-border bg-muted/20 p-4 text-sm leading-6 text-muted-foreground">
+                  Use the menu in the header to move between dashboard, slots, studio, and profile.
+                </p>
+              </>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
+                Consumer mode is active. Use the bottom nav to move quickly between discovery, bookings, and profile.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <aside className="hidden space-y-6 lg:sticky lg:top-6 lg:block lg:self-start">
         <Card className="border-border/70 bg-card/95">
           <CardHeader className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
@@ -107,31 +172,26 @@ export default async function WorkspaceLayout({
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Legacy tools
               </p>
-              {activeOrganization ? (
-                <div className="rounded-2xl border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(242,246,255,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                  <p className="text-sm font-semibold text-foreground">{activeOrganization.name}</p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Organization and billing controls are still available, but they are no longer part of the main Swift Slots path.
-                  </p>
+              <div className="rounded-2xl border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(242,246,255,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                <p className="text-sm font-semibold text-foreground">
+                  {activeOrganization ? activeOrganization.name : "Inherited starter access"}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Organization, billing, and invite administration remain available one level deeper so the main Swift Slots path stays product-first.
+                </p>
+                {activeOrganization ? (
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span>{activeRole ?? "member"}</span>
                     <span>|</span>
                     <span>{activeOrganization.slug}</span>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button asChild variant="outline">
-                      <Link href="/settings/organization">Org settings</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/settings/billing">Billing</Link>
-                    </Button>
-                  </div>
+                ) : null}
+                <div className="mt-4">
+                  <Button asChild variant="outline">
+                    <Link href="/settings/legacy">Open legacy settings</Link>
+                  </Button>
                 </div>
-              ) : (
-                <p className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
-                  No legacy organization controls are active for this account.
-                </p>
-              )}
+              </div>
             </section>
           </CardContent>
           <CardFooter className="border-t border-border/60 bg-card">
@@ -144,7 +204,9 @@ export default async function WorkspaceLayout({
         </Card>
       </aside>
 
-      <section className="space-y-6">{children}</section>
+      <section className="min-w-0 space-y-6">{children}</section>
+
+      {profile?.role === "consumer" ? <WorkspaceNav role={profile.role} variant="mobile-bottom" /> : null}
     </main>
   );
 }

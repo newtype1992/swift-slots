@@ -96,7 +96,7 @@ export default async function MarketplaceSlotDetailPage({
       {query.message ? <Notice tone="success">{query.message}</Notice> : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card className="border-border/80 bg-card/95 shadow-sm">
+        <Card className="order-2 border-border/80 bg-card/95 shadow-sm xl:order-1">
           <CardHeader className="space-y-2">
             <CardTitle>Class details</CardTitle>
           </CardHeader>
@@ -127,7 +127,7 @@ export default async function MarketplaceSlotDetailPage({
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-card/95 shadow-sm">
+        <Card className="order-1 border-border/80 bg-card/95 shadow-sm xl:order-2">
           <CardHeader className="space-y-2">
             <CardTitle>Book this slot</CardTitle>
             <p className="text-sm leading-6 text-muted-foreground">

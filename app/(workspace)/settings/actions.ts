@@ -19,8 +19,8 @@ function parseCategories(input: string) {
     .filter(Boolean);
 }
 
-function resolveRedirectTarget(formData: FormData, fallbackPath: string) {
-  const redirectTo = String(formData.get("redirectTo") || "").trim();
+function resolveRedirectTarget(formData: FormData, fallbackPath: string, fieldName = "redirectTo") {
+  const redirectTo = String(formData.get(fieldName) || "").trim();
 
   if (redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
     return redirectTo;
@@ -308,36 +308,37 @@ export async function createSlotAction(formData: FormData) {
   const originalPrice = Number(formData.get("originalPrice") || 0);
   const discountPercent = Number(formData.get("discountPercent") || 0);
   const availableSpots = Number(formData.get("availableSpots") || 0);
-  const redirectTo = resolveRedirectTarget(formData, "/settings/studio");
+  const errorRedirectTo = resolveRedirectTarget(formData, "/settings/studio");
+  const successRedirectTo = resolveRedirectTarget(formData, errorRedirectTo, "successRedirectTo");
 
   if (!studioId || !classType) {
-    redirect(withFlash(redirectTo, "error", "Studio and class type are required."));
+    redirect(withFlash(errorRedirectTo, "error", "Studio and class type are required."));
   }
 
   if (!Number.isFinite(classLengthMinutes) || classLengthMinutes <= 0) {
-    redirect(withFlash(redirectTo, "error", "Class length must be greater than zero."));
+    redirect(withFlash(errorRedirectTo, "error", "Class length must be greater than zero."));
   }
 
   if (!Number.isFinite(originalPrice) || originalPrice <= 0) {
-    redirect(withFlash(redirectTo, "error", "Original price must be greater than zero."));
+    redirect(withFlash(errorRedirectTo, "error", "Original price must be greater than zero."));
   }
 
   if (!Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent >= 100) {
-    redirect(withFlash(redirectTo, "error", "Discount percent must be between 0 and 100."));
+    redirect(withFlash(errorRedirectTo, "error", "Discount percent must be between 0 and 100."));
   }
 
   if (!Number.isFinite(availableSpots) || availableSpots < 1) {
-    redirect(withFlash(redirectTo, "error", "Available spots must be at least 1."));
+    redirect(withFlash(errorRedirectTo, "error", "Available spots must be at least 1."));
   }
 
   const startTime = parseMontrealDateTimeInput(startTimeRaw);
 
   if (!startTime) {
-    redirect(withFlash(redirectTo, "error", "Enter a valid class start time."));
+    redirect(withFlash(errorRedirectTo, "error", "Enter a valid class start time."));
   }
 
   if (new Date(startTime).getTime() <= Date.now() + 15 * 60 * 1000) {
-    redirect(withFlash(redirectTo, "error", "Slots must start at least 15 minutes in the future."));
+    redirect(withFlash(errorRedirectTo, "error", "Slots must start at least 15 minutes in the future."));
   }
 
   const { supabase, user } = await requireStudioOperator();
@@ -349,7 +350,7 @@ export async function createSlotAction(formData: FormData) {
     .maybeSingle<{ id: string }>();
 
   if (studioError || !studio) {
-    redirect(withFlash(redirectTo, "error", "That studio is not available to this account."));
+    redirect(withFlash(errorRedirectTo, "error", "That studio is not available to this account."));
   }
 
   const { error } = await supabase.from("slots").insert({
@@ -364,10 +365,10 @@ export async function createSlotAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(withFlash(redirectTo, "error", error.message));
+    redirect(withFlash(errorRedirectTo, "error", error.message));
   }
 
-  redirect(withFlash(redirectTo, "message", "Slot posted."));
+  redirect(withFlash(successRedirectTo, "message", "Slot posted."));
 }
 
 export async function updateOrganizationDetailsAction(formData: FormData) {

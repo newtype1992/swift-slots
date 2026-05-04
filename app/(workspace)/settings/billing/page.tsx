@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,11 @@ export default async function BillingSettingsPage({ searchParams }: BillingSetti
         eyebrow="Legacy billing"
         title={`${activeOrganization.name} billing settings`}
         description="This inherited starter billing surface is still reachable, but it has been removed from the main Swift Slots navigation."
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/settings/legacy">Legacy overview</Link>
+          </Button>
+        }
       />
 
       {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}

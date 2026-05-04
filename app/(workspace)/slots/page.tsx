@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OperatorSlotCard } from "@/components/studio/operator-slot-card";
-import { SlotComposer } from "@/components/studio/slot-composer";
 import { EmptyState } from "@/components/swift/empty-state";
 import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
@@ -60,7 +59,7 @@ export default async function SlotsPage({ searchParams }: SlotsPageProps) {
       <PageHeader
         eyebrow="Slots"
         title="Live inventory management"
-        description="Slot publishing now lives in its own operator route. Use it to post new openings and watch inventory move through open, filled, locked, and expired states."
+        description="Inventory monitoring stays here. Creating a new opening now happens in a dedicated posting flow built to work cleanly on smaller screens."
         meta={
           <>
             <Badge variant="outline">{openCount} open</Badge>
@@ -75,7 +74,7 @@ export default async function SlotsPage({ searchParams }: SlotsPageProps) {
             </Button>
             {studio ? (
               <Button asChild>
-                <Link href="#slot-composer">Post slot</Link>
+                <Link href="/slots/new">Post slot</Link>
               </Button>
             ) : null}
           </>
@@ -86,69 +85,62 @@ export default async function SlotsPage({ searchParams }: SlotsPageProps) {
       {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
       {studio ? (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-          <Card id="slot-composer" className="border-border/80 bg-card/95 shadow-sm">
-            <CardHeader className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Slot composer
-              </p>
-              <CardTitle>Post a discounted opening</CardTitle>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Publish a future class slot with original price, discount percent, and available spots.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <SlotComposer studioId={studio.id} redirectTo="/slots" />
-            </CardContent>
-          </Card>
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Inventory monitor
+            </p>
+            <CardTitle>{studio.name}</CardTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Keep live inventory separate from studio profile editing. Use the dedicated slot posting route when you need to publish a new discounted opening.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {slots.length > 0 ? (
+              <Tabs defaultValue="all" className="gap-4">
+                <TabsList variant="line" className="w-full justify-start overflow-x-auto">
+                  {slotViews.map((view) => (
+                    <TabsTrigger key={view.value} value={view.value}>
+                      {view.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {slotViews.map((view) => {
+                  const visibleSlots =
+                    view.value === "all" ? slots : slots.filter((slot) => slot.status === view.value);
 
-          <Card className="border-border/80 bg-card/95 shadow-sm">
-            <CardHeader className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Inventory monitor
-              </p>
-              <CardTitle>{studio.name}</CardTitle>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Keep live inventory separate from studio profile editing. Tabs below are built with the shared Radix-backed tab primitive.
-              </p>
-            </CardHeader>
-            <CardContent>
-              {slots.length > 0 ? (
-                <Tabs defaultValue="all" className="gap-4">
-                  <TabsList variant="line" className="w-full justify-start overflow-x-auto">
-                    {slotViews.map((view) => (
-                      <TabsTrigger key={view.value} value={view.value}>
-                        {view.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  {slotViews.map((view) => {
-                    const visibleSlots =
-                      view.value === "all" ? slots : slots.filter((slot) => slot.status === view.value);
-
-                    return (
-                      <TabsContent key={view.value} value={view.value} className="space-y-4">
-                        {visibleSlots.length > 0 ? (
-                          visibleSlots.map((slot) => <OperatorSlotCard key={slot.id} slot={slot} />)
-                        ) : (
-                          <EmptyState
-                            title={`No ${view.label.toLowerCase()} slots`}
-                            description="Publish a new opening or wait for live inventory to transition into this state."
-                          />
-                        )}
-                      </TabsContent>
-                    );
-                  })}
-                </Tabs>
-              ) : (
-                <EmptyState
-                  title="No slots posted yet"
-                  description="Use the slot composer to publish your first discounted opening."
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  return (
+                    <TabsContent key={view.value} value={view.value} className="space-y-4">
+                      {visibleSlots.length > 0 ? (
+                        visibleSlots.map((slot) => <OperatorSlotCard key={slot.id} slot={slot} />)
+                      ) : (
+                        <EmptyState
+                          title={`No ${view.label.toLowerCase()} slots`}
+                          description="Publish a new opening or wait for live inventory to transition into this state."
+                          action={
+                            <Button asChild variant="outline">
+                              <Link href="/slots/new">Post slot</Link>
+                            </Button>
+                          }
+                        />
+                      )}
+                    </TabsContent>
+                  );
+                })}
+              </Tabs>
+            ) : (
+              <EmptyState
+                title="No slots posted yet"
+                description="Use the dedicated posting flow to publish your first discounted opening."
+                action={
+                  <Button asChild>
+                    <Link href="/slots/new">Post your first slot</Link>
+                  </Button>
+                }
+              />
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <EmptyState
           title="Create your studio profile first"

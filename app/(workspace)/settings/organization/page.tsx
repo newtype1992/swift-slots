@@ -71,9 +71,14 @@ export default async function OrganizationSettingsPage({ searchParams }: Organiz
           </>
         }
         actions={
-          <Button asChild variant="outline">
-            <Link href="/settings/billing">Open billing</Link>
-          </Button>
+          <>
+            <Button asChild variant="outline">
+              <Link href="/settings/legacy">Legacy overview</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/settings/billing">Open billing</Link>
+            </Button>
+          </>
         }
       />
 

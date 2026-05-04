@@ -1,13 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  MarketplaceFilterBar,
+  type MarketplaceFilters,
+  type StartWindowFilter,
+} from "@/components/marketplace/marketplace-filter-bar";
+import {
+  LocationStatusCard,
+  type LocationMode,
+} from "@/components/marketplace/location-status-card";
 import { SlotCard } from "@/components/marketplace/slot-card";
 import { EmptyState } from "@/components/swift/empty-state";
-import { NativeSelect } from "@/components/swift/native-select";
 import type { MarketplaceSlot } from "@/lib/marketplace/server";
 import { discountedPrice } from "@/lib/marketplace/server";
 import { type Coordinates, rankMarketplaceSlots } from "@/lib/location";
@@ -17,9 +22,6 @@ type MarketplaceResultsProps = {
   savedCoordinates: Coordinates | null;
   savedAddressLabel: string | null;
 };
-
-type LocationMode = "device" | "profile" | "none";
-type StartWindowFilter = "any" | "2h" | "4h" | "today";
 
 function formatDistance(distanceKm: number) {
   if (distanceKm < 1) {
@@ -31,12 +33,7 @@ function formatDistance(distanceKm: number) {
 
 function filterMarketplaceSlots(
   slots: MarketplaceSlot[],
-  filters: {
-    classType: string;
-    startWindow: StartWindowFilter;
-    maxPrice: string;
-    minDiscount: string;
-  }
+  filters: MarketplaceFilters
 ) {
   const now = Date.now();
   const endOfToday = new Date();
@@ -182,138 +179,34 @@ export function MarketplaceResults({
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/80 bg-card/95 shadow-sm">
-        <CardHeader className="space-y-3">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Discovery mode
-              </p>
-              <CardTitle>
-                {locationMode === "device"
-                  ? "Current location active"
-                  : locationMode === "profile"
-                    ? "Saved address fallback"
-                    : "Location not set"}
-              </CardTitle>
-              <p className="text-sm leading-6 text-muted-foreground">{locationMessage}</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={requestCurrentLocation} disabled={isRequestingLocation}>
-                {isRequestingLocation ? "Locating..." : "Use current location"}
-              </Button>
-              {locationMode !== "profile" ? (
-                <Button asChild variant="outline">
-                  <Link href="/settings/profile">Update saved address</Link>
-                </Button>
-              ) : null}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <LocationStatusCard
+        locationMode={locationMode}
+        locationMessage={locationMessage}
+        isRequestingLocation={isRequestingLocation}
+        showSavedAddressAction={locationMode !== "profile"}
+        onRequestCurrentLocation={requestCurrentLocation}
+      />
 
-      <Card className="border-border/80 bg-card/95 shadow-sm">
-        <CardHeader className="space-y-3">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Filters
-              </p>
-              <CardTitle>Deals happening now</CardTitle>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Refine by class type, timing, price, and discount while keeping the booking flow dense and readable.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">
-                {filteredRankedSlots.length} of {slots.length} visible
-              </Badge>
-              {activeFilterCount > 0 ? (
-                <Button type="button" variant="outline" onClick={resetFilters}>
-                  Clear {activeFilterCount} filter{activeFilterCount === 1 ? "" : "s"}
-                </Button>
-              ) : null}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant={classTypeFilter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setClassTypeFilter("all")}
-            >
-              All classes
-            </Button>
-            {classTypeOptions.map((classType) => (
-              <Button
-                key={classType}
-                type="button"
-                variant={classTypeFilter === classType ? "default" : "outline"}
-                size="sm"
-                onClick={() => setClassTypeFilter(classType)}
-              >
-                {classType}
-              </Button>
-            ))}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="grid gap-2">
-              <label htmlFor="marketplace-start-window" className="text-sm font-medium text-foreground">
-                Starts within
-              </label>
-              <NativeSelect
-                id="marketplace-start-window"
-                value={startWindowFilter}
-                onChange={(event) => setStartWindowFilter(event.target.value as StartWindowFilter)}
-              >
-                <option value="any">Any time</option>
-                <option value="2h">Next 2 hours</option>
-                <option value="4h">Next 4 hours</option>
-                <option value="today">Today</option>
-              </NativeSelect>
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="marketplace-max-price" className="text-sm font-medium text-foreground">
-                Max discounted price
-              </label>
-              <NativeSelect
-                id="marketplace-max-price"
-                value={maxPriceFilter}
-                onChange={(event) => setMaxPriceFilter(event.target.value)}
-              >
-                <option value="">Any price</option>
-                <option value="15">$15 or less</option>
-                <option value="25">$25 or less</option>
-                <option value="35">$35 or less</option>
-                <option value="50">$50 or less</option>
-              </NativeSelect>
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="marketplace-min-discount" className="text-sm font-medium text-foreground">
-                Minimum discount
-              </label>
-              <NativeSelect
-                id="marketplace-min-discount"
-                value={minDiscountFilter}
-                onChange={(event) => setMinDiscountFilter(event.target.value)}
-              >
-                <option value="0">Any discount</option>
-                <option value="10">10% or more</option>
-                <option value="20">20% or more</option>
-                <option value="30">30% or more</option>
-                <option value="40">40% or more</option>
-                <option value="50">50% or more</option>
-              </NativeSelect>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <MarketplaceFilterBar
+        classTypeOptions={classTypeOptions}
+        filters={{
+          classType: classTypeFilter,
+          startWindow: startWindowFilter,
+          maxPrice: maxPriceFilter,
+          minDiscount: minDiscountFilter,
+        }}
+        activeFilterCount={activeFilterCount}
+        visibleCount={filteredRankedSlots.length}
+        totalCount={slots.length}
+        onClassTypeChange={setClassTypeFilter}
+        onStartWindowChange={setStartWindowFilter}
+        onMaxPriceChange={setMaxPriceFilter}
+        onMinDiscountChange={setMinDiscountFilter}
+        onReset={resetFilters}
+      />
 
       {filteredRankedSlots.length > 0 ? (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 xl:grid-cols-2">
           {filteredRankedSlots.map(({ slot, distanceKm }) => (
             <SlotCard
               key={slot.id}

@@ -21,7 +21,7 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        "rounded-[28px] border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,255,0.92))] p-6 shadow-[0_22px_46px_-32px_rgba(71,85,105,0.38)] ring-1 ring-white/70 backdrop-blur-sm",
+        "rounded-[28px] border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,255,0.92))] p-5 shadow-[0_22px_46px_-32px_rgba(71,85,105,0.38)] ring-1 ring-white/70 backdrop-blur-sm md:p-6",
         "flex flex-col gap-5 md:flex-row md:items-start md:justify-between",
         className
       )}
@@ -31,7 +31,7 @@ export function PageHeader({
           {eyebrow}
         </p>
         <div className="space-y-2">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl md:text-4xl">
             {title}
           </h1>
           {description ? (
@@ -44,7 +44,11 @@ export function PageHeader({
       {(actions || meta) ? (
         <div className="flex w-full flex-col gap-3 md:w-auto md:min-w-72 md:items-end">
           {meta ? <div className="flex flex-wrap gap-2 md:justify-end">{meta}</div> : null}
-          {actions ? <div className="flex flex-wrap gap-2 md:justify-end">{actions}</div> : null}
+          {actions ? (
+            <div className="grid gap-2 sm:flex sm:flex-wrap md:justify-end [&_[data-slot=button]]:w-full sm:[&_[data-slot=button]]:w-auto">
+              {actions}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>

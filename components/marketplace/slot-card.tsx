@@ -38,7 +38,7 @@ export function SlotCard({ slot, distanceLabel }: SlotCardProps) {
           <Badge variant="secondary">{formatDateTime(slot.start_time)}</Badge>
           <Badge variant="outline">{distanceLabel}</Badge>
         </div>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {slot.studio?.name ?? "Unknown studio"}
@@ -48,7 +48,7 @@ export function SlotCard({ slot, distanceLabel }: SlotCardProps) {
               {slot.studio?.location_text ?? "Montreal"}
             </p>
           </div>
-          <div className="rounded-2xl border border-primary/12 bg-primary/10 px-3.5 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+          <div className="w-full rounded-2xl border border-primary/12 bg-primary/10 px-3.5 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] sm:w-auto sm:text-right">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/75">Live price</p>
             <p className="mt-1 text-lg font-semibold tracking-tight text-primary">{formatMoney(priceNow)}</p>
             <p className="text-xs text-muted-foreground line-through">
@@ -71,11 +71,11 @@ export function SlotCard({ slot, distanceLabel }: SlotCardProps) {
           <p className="mt-1 text-sm font-semibold text-primary">{slot.discount_percent}% off</p>
         </div>
       </CardContent>
-      <CardFooter className="items-end justify-between gap-4">
+      <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-between">
         <p className="text-sm text-muted-foreground">
           Fast path to checkout. Inventory auto-locks 15 minutes before start.
         </p>
-        <Button asChild size="sm">
+        <Button asChild size="sm" className="w-full sm:w-auto">
           <Link href={`/marketplace/${slot.id}`}>
             Book slot
             <ArrowRight />

@@ -65,11 +65,11 @@ export function BookingCard({ booking }: BookingCardProps) {
           <p className="mt-1 font-medium text-foreground">{formatDateTime(booking.created_at)}</p>
         </div>
       </CardContent>
-      <CardFooter className="justify-between gap-3">
+      <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           Review the confirmation screen for booking status and class details.
         </p>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="w-full sm:w-auto">
           <Link href={`/marketplace/bookings/${booking.id}`}>
             Open confirmation
             <ArrowRight />

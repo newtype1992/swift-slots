@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OperatorBookingCard } from "@/components/studio/operator-booking-card";
 import { OperatorSlotCard } from "@/components/studio/operator-slot-card";
 import { EmptyState } from "@/components/swift/empty-state";
 import { Notice } from "@/components/swift/notice";
 import { PageHeader } from "@/components/swift/page-header";
-import { getOperatorStudioSnapshot } from "@/lib/studios/server";
+import { getOperatorDashboardSnapshot } from "@/lib/studios/server";
 import { requireWorkspaceShellContext } from "@/lib/workspace/server";
 
 type DashboardOverviewPageProps = {
@@ -25,12 +26,13 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
     redirect("/marketplace");
   }
 
-  const { studio, slots } = await getOperatorStudioSnapshot({
+  const { studio, slots, bookings } = await getOperatorDashboardSnapshot({
     supabase,
     userId: user.id,
   });
   const openSlots = slots.filter((slot) => slot.status === "open");
   const lockedSlots = slots.filter((slot) => slot.status === "locked");
+  const paidBookings = bookings.filter((booking) => booking.payment_status === "paid");
 
   return (
     <div className="space-y-6">
@@ -42,6 +44,7 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
           <>
             <Badge variant="outline">{studio ? "Studio connected" : "Studio setup needed"}</Badge>
             <Badge variant="outline">{openSlots.length} open slots</Badge>
+            <Badge variant="outline">{paidBookings.length} paid recently</Badge>
           </>
         }
         actions={
@@ -49,9 +52,15 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             <Button asChild variant="outline">
               <Link href="/settings/studio">Studio profile</Link>
             </Button>
-            <Button asChild>
-              <Link href="/slots">Open slots</Link>
-            </Button>
+            {studio ? (
+              <Button asChild>
+                <Link href="/slots/new">Post slot</Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/settings/studio">Create studio profile</Link>
+              </Button>
+            )}
           </>
         }
       />
@@ -59,7 +68,7 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
       {params.error ? <Notice tone="error">Error: {params.error}</Notice> : null}
       {params.message ? <Notice tone="success">{params.message}</Notice> : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="border-border/80 bg-card/95 shadow-sm">
           <CardHeader className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -97,32 +106,65 @@ export default async function DashboardOverviewPage({ searchParams }: DashboardO
             Slots that are no longer editable or visible for booking.
           </CardContent>
         </Card>
+
+        <Card className="border-border/80 bg-card/95 shadow-sm">
+          <CardHeader className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Recent booking activity
+            </p>
+            <CardTitle>{bookings.length}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm leading-6 text-muted-foreground">
+            Latest consumer reservations visible to this studio account, including payment status and captured amounts.
+          </CardContent>
+        </Card>
       </div>
 
       {studio ? (
-        <Card className="border-border/80 bg-card/95 shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle>Recent slots</CardTitle>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Use this summary to check the next few openings, then jump into Slots for posting and monitoring.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {slots.length > 0 ? (
-              slots.map((slot) => <OperatorSlotCard key={slot.id} slot={slot} />)
-            ) : (
-              <EmptyState
-                title="No slots posted yet"
-                description="Open the Slots route to publish your first discounted opening."
-                action={
-                  <Button asChild>
-                    <Link href="/slots">Open slots</Link>
-                  </Button>
-                }
-              />
-            )}
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <Card className="border-border/80 bg-card/95 shadow-sm">
+            <CardHeader className="space-y-2">
+              <CardTitle>Recent slots</CardTitle>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Use this summary to check the next few openings, then jump into Slots for posting and monitoring.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {slots.length > 0 ? (
+                slots.map((slot) => <OperatorSlotCard key={slot.id} slot={slot} />)
+              ) : (
+                <EmptyState
+                  title="No slots posted yet"
+                  description="Open the dedicated posting flow to publish your first discounted opening."
+                  action={
+                    <Button asChild>
+                      <Link href="/slots/new">Post slot</Link>
+                    </Button>
+                  }
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/80 bg-card/95 shadow-sm">
+            <CardHeader className="space-y-2">
+              <CardTitle>Recent booking activity</CardTitle>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Keep an eye on the latest reservations and payment outcomes without leaving the operator overview.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {bookings.length > 0 ? (
+                bookings.map((booking) => <OperatorBookingCard key={booking.id} booking={booking} />)
+              ) : (
+                <EmptyState
+                  title="No booking activity yet"
+                  description="Once consumers reserve this studio's openings, the latest payment and slot activity will appear here."
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <EmptyState
           title="Create a studio profile to begin"
